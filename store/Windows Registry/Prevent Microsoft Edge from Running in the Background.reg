@@ -5,4 +5,3 @@
 "StartupBoostEnabled"=dword:00000000
 "DefaultBrowserSettingEnabled"=dword:00000000
 "HideFirstRunExperience"=dword:00000001
-
