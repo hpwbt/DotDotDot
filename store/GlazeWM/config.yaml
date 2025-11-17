@@ -122,6 +122,7 @@ window_rules:
       # Ignores various programs. 
       - window_process: { equals: 'GHelper' }
       - window_process: { equals: 'Mullvad VPN' }
+      - window_process: { equals: 'PEAK'}
       - window_process: { equals: 'Overwatch'}
       - window_process: { equals: 'javaw'}
 

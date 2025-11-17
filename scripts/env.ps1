@@ -1,4 +1,4 @@
-Set-StrictMode -Version 2.0
+Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
 # Locate LibreWolf profiles directory.
@@ -8,15 +8,13 @@ if (-not (Test-Path -LiteralPath $ProfilesRoot)) {
 }
 
 # Find exactly one *.default-default profile.
-$ProfileMatches = @(Get-ChildItem -LiteralPath $ProfilesRoot -Directory -Filter '*.default-default' | Select-Object -ExpandProperty FullName)
+$ProfileMatches = @(Get-ChildItem -Path $ProfilesRoot -Directory -Filter '*.default-default')
 if ($ProfileMatches.Count -eq 0) { throw "No *.default-default profile found." }
 if ($ProfileMatches.Count -gt 1) { throw "Multiple default-default profiles found." }
 
 # Set LIBREPROFILE environment variable.
-$env:LIBREPROFILE = $ProfileMatches[0]
+$env:LIBREPROFILE = $ProfileMatches[0].FullName
 
-# Confirm success and print variable value.
-Write-Host "`nEnvironmental variable successfully set:" -ForegroundColor Green
-Get-ChildItem Env: | Where-Object { $_.Name -in 'LIBREPROFILE' } | ForEach-Object {
-    Write-Host ("$($_.Name) = `"$($_.Value)`"")
-}
+# Confirm success.
+Write-Host "`nEnvironment variable successfully set:" -ForegroundColor Green
+Write-Host "LIBREPROFILE = `"$env:LIBREPROFILE`""

@@ -3,5 +3,8 @@
 	email = viktor.yanakov@gmail.com
 [core]
 	pager = cat
+    editor = code --wait
 [init]
 	defaultBranch = main
+[pull]
+    rebase = false
