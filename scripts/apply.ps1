@@ -12,13 +12,15 @@ $StatusCodes = @{
 
 # Resolve repository paths.
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$RepoRoot  = Split-Path $ScriptDir -Parent
-$MapPath   = Join-Path $RepoRoot "map.json"
+$ParentDir = Split-Path $ScriptDir -Parent
+$MapPath   = Join-Path $ParentDir "map.json"
 
-$ExpectedStorePath = Join-Path $env:USERPROFILE 'Dotfiles'
-if (-not (Test-Path -LiteralPath $ExpectedStorePath)) {
-    Write-Host ("`nDotfiles directory not found at: {0}" -f $ExpectedStorePath) -ForegroundColor Yellow
-    Write-Host "Rename current directory and move it to the expected path"
+# Verify we're running from inside the Dotfiles directory
+$ExpectedDirName = 'Dotfiles'
+if ($ParentDir -notmatch "\\$ExpectedDirName$") {
+    Write-Host ("`nError: This script must be run from inside the '$ExpectedDirName' directory.") -ForegroundColor Red
+    Write-Host ("Current location: {0}" -f $ParentDir)
+    Write-Host ("Expected: A path ending in '\$ExpectedDirName'")
     exit 1
 }
 
