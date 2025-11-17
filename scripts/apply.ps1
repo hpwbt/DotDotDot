@@ -329,7 +329,7 @@ function Import-RegFile {
     }
 
     try {
-        & reg.exe import $Path 2>&1 | Out-Null
+        $null = & reg.exe import $Path 2>&1
         $exitCode = $LASTEXITCODE
 
         if ($exitCode -eq 0) {
