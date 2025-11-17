@@ -217,47 +217,47 @@ function Compare-Files {
 # Copy a single file with skip and overwrite logic.
 function Copy-File {
     param(
-        [Parameter(Mandatory=$true)][string]$Source,
-        [Parameter(Mandatory=$true)][string]$Destination
+        [Parameter(Mandatory=$true)][string]$Store,
+        [Parameter(Mandatory=$true)][string]$Live
     )
 
-    if (-not (Test-Path -LiteralPath $Source)) {
+    if (-not (Test-Path -LiteralPath $Store)) {
         return [pscustomobject]@{
             Status  = $StatusCodes.Missing
-            Src     = $Source
-            Dst     = $Destination
+            Store   = $Store
+            Live    = $Live
             Message = 'Source not found'
         }
     }
 
     try {
-        Ensure-ParentDirectory -Path $Destination
+        Ensure-ParentDirectory -Path $Live
 
-        if (Test-Path -LiteralPath $Destination) {
-            if (Compare-Files -PathA $Source -PathB $Destination) {
+        if (Test-Path -LiteralPath $Live) {
+            if (Compare-Files -PathA $Store -PathB $Live) {
                 return [pscustomobject]@{
                     Status  = $StatusCodes.Skipped
-                    Src     = $Source
-                    Dst     = $Destination
+                    Store   = $Store
+                    Live    = $Live
                     Message = 'Already identical'
                 }
             }
-            Clear-ReadOnly -Path $Destination
+            Clear-ReadOnly -Path $Live
         }
 
-        Copy-Item -LiteralPath $Source -Destination $Destination -Force
+        Copy-Item -LiteralPath $Store -Destination $Live -Force
 
         [pscustomobject]@{
             Status  = $StatusCodes.Succeeded
-            Src     = $Source
-            Dst     = $Destination
+            Store   = $Store
+            Live    = $Live
             Message = $null
         }
     } catch {
         [pscustomobject]@{
             Status  = $StatusCodes.Failed
-            Src     = $Source
-            Dst     = $Destination
+            Store   = $Store
+            Live    = $Live
             Message = $_.Exception.Message
         }
     }
@@ -266,16 +266,16 @@ function Copy-File {
 # Copy a directory tree with per-file decisions.
 function Copy-Directory {
     param(
-        [Parameter(Mandatory=$true)][string]$Source,
-        [Parameter(Mandatory=$true)][string]$Destination
+        [Parameter(Mandatory=$true)][string]$Store,
+        [Parameter(Mandatory=$true)][string]$Live
     )
 
-    if (-not (Test-Path -LiteralPath $Source)) {
+    if (-not (Test-Path -LiteralPath $Store)) {
         return [pscustomobject]@{
             Results = @([pscustomobject]@{
                 Status  = $StatusCodes.Missing
-                Src     = $Source
-                Dst     = $Destination
+                Store   = $Store
+                Live    = $Live
                 Message = 'Source folder not found'
             })
         }
@@ -284,23 +284,23 @@ function Copy-Directory {
     $results = New-Object System.Collections.Generic.List[object]
 
     try {
-        if (-not (Test-Path -LiteralPath $Destination)) {
-            New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+        if (-not (Test-Path -LiteralPath $Live)) {
+            New-Item -ItemType Directory -Path $Live -Force | Out-Null
         }
 
-        Get-ChildItem -LiteralPath $Source -Recurse -File -ErrorAction Stop | ForEach-Object {
-            $relativePath = $_.FullName.Substring($Source.Length).TrimStart('\','/')
-            $destinationFile = Join-Path $Destination $relativePath
-            $sourceFile = $_.FullName
+        Get-ChildItem -LiteralPath $Store -Recurse -File -ErrorAction Stop | ForEach-Object {
+            $relativePath = $_.FullName.Substring($Store.Length).TrimStart('\','/')
+            $liveFile = Join-Path $Live $relativePath
+            $storeFile = $_.FullName
 
-            $copyResult = Copy-File -Source $sourceFile -Destination $destinationFile
+            $copyResult = Copy-File -Store $storeFile -Live $liveFile
             $results.Add($copyResult)
         }
     } catch {
         $results.Add([pscustomobject]@{
             Status  = $StatusCodes.Failed
-            Src     = $Source
-            Dst     = $Destination
+            Store   = $Store
+            Live    = $Live
             Message = $_.Exception.Message
         })
     }
@@ -363,47 +363,53 @@ function Write-OperationResult {
         [Parameter(Mandatory=$true)][psobject]$Result
     )
 
-    $displayPath = if ($Result.Dst) {
-        $Result.Dst
-    } elseif ($Result.Src) {
-        $Result.Src
-    } elseif ($Result.File) {
-        $Result.File
-    } else {
-        '<unknown>'
-    }
-
     switch ($Result.Status) {
         $StatusCodes.Succeeded {
-            if ($Result.Dst) {
-                Write-Host ('Succeeded {0} -> {1}' -f $Result.Src, $Result.Dst)
+            if (Test-HasProperty -Object $Result -PropertyName 'Live') {
+                Write-Host ('Succeeded {0} -> {1}' -f $Result.Store, $Result.Live)
             } else {
-                $file = if ($Result.File) { $Result.File } else { $Result.Src }
-                Write-Host ('Succeeded {0}' -f $file)
+                Write-Host ('Succeeded {0}' -f $Result.File)
             }
         }
         $StatusCodes.Skipped {
-            $path = if ($Result.Dst) {
-                $Result.Dst
-            } elseif ($Result.File) {
-                $Result.File
+            if (Test-HasProperty -Object $Result -PropertyName 'Live') {
+                Write-Host ('Skipped {0}' -f $Result.Live)
             } else {
-                $Result.Src
+                Write-Host ('Skipped {0}' -f $Result.File)
             }
-            Write-Host ('Skipped {0}' -f $path)
         }
         $StatusCodes.Missing {
-            $path = if ($Result.Src) { $Result.Src } else { $Result.File }
-            Write-Host ('Missing {0}' -f $path)
+            if (Test-HasProperty -Object $Result -PropertyName 'Store') {
+                Write-Host ('Missing {0}' -f $Result.Store)
+            } else {
+                Write-Host ('Missing {0}' -f $Result.File)
+            }
         }
         $StatusCodes.Failed {
+            $displayPath = if (Test-HasProperty -Object $Result -PropertyName 'Live') {
+                $Result.Live
+            } elseif (Test-HasProperty -Object $Result -PropertyName 'File') {
+                $Result.File
+            } elseif (Test-HasProperty -Object $Result -PropertyName 'Store') {
+                $Result.Store
+            } else {
+                '<unknown>'
+            }
             Write-Host ('Failed {0}: {1}' -f $displayPath, $Result.Message)
         }
         $StatusCodes.Imported {
-            $file = if ($Result.File) { $Result.File } else { '<unknown>' }
-            Write-Host ('Succeeded {0}' -f $file)
+            Write-Host ('Imported {0}' -f $Result.File)
         }
         default {
+            $displayPath = if (Test-HasProperty -Object $Result -PropertyName 'Live') {
+                $Result.Live
+            } elseif (Test-HasProperty -Object $Result -PropertyName 'File') {
+                $Result.File
+            } elseif (Test-HasProperty -Object $Result -PropertyName 'Store') {
+                $Result.Store
+            } else {
+                '<unknown>'
+            }
             Write-Host ('Failed {0}: Unknown status ''{1}''' -f $displayPath, $Result.Status)
         }
     }
@@ -452,27 +458,27 @@ function Process-FileMapping {
 
     foreach ($file in $program.files) {
         try {
-            $sourcePath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $file.store
-            $destinationPath = Normalize-Path (Expand-EnvTokens -Text $file.live)
+            $storePath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $file.store
+            $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
 
-            if (-not (Test-Path -LiteralPath $sourcePath)) {
+            if (-not (Test-Path -LiteralPath $storePath)) {
                 $result = [pscustomobject]@{
                     Status  = $StatusCodes.Missing
-                    Src     = $sourcePath
-                    Dst     = $null
+                    Store   = $storePath
+                    Live    = $null
                     Message = 'Source not found'
                 }
                 Handle-OperationResult -Result $result -Counters $Counters
                 continue
             }
 
-            $result = Copy-File -Source $sourcePath -Destination $destinationPath
+            $result = Copy-File -Store $storePath -Live $livePath
             Handle-OperationResult -Result $result -Counters $Counters
         } catch {
             $result = [pscustomobject]@{
                 Status  = $StatusCodes.Failed
-                Src     = $file.live
-                Dst     = $null
+                Store   = $file.live
+                Live    = $null
                 Message = $_.Exception.Message
             }
             Handle-OperationResult -Result $result -Counters $Counters
@@ -495,29 +501,29 @@ function Process-DirectoryMapping {
 
     foreach ($directory in $program.directories) {
         try {
-            $sourceDirectory = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $directory.store
-            $destinationDirectory = Normalize-Path (Expand-EnvTokens -Text $directory.live)
+            $storeDirectory = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $directory.store
+            $liveDirectory = Normalize-Path (Expand-EnvTokens -Text $directory.live)
 
-            if (-not (Test-Path -LiteralPath $sourceDirectory)) {
+            if (-not (Test-Path -LiteralPath $storeDirectory)) {
                 $result = [pscustomobject]@{
                     Status  = $StatusCodes.Missing
-                    Src     = $sourceDirectory
-                    Dst     = $null
+                    Store   = $storeDirectory
+                    Live    = $null
                     Message = 'Source folder not found'
                 }
                 Handle-OperationResult -Result $result -Counters $Counters
                 continue
             }
 
-            $directoryResult = Copy-Directory -Source $sourceDirectory -Destination $destinationDirectory
+            $directoryResult = Copy-Directory -Store $storeDirectory -Live $liveDirectory
             foreach ($result in $directoryResult.Results) {
                 Handle-OperationResult -Result $result -Counters $Counters
             }
         } catch {
             $result = [pscustomobject]@{
                 Status  = $StatusCodes.Failed
-                Src     = $directory.live
-                Dst     = $null
+                Store   = $directory.live
+                Live    = $null
                 Message = $_.Exception.Message
             }
             Handle-OperationResult -Result $result -Counters $Counters
