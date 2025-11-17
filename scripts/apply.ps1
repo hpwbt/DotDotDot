@@ -329,13 +329,10 @@ function Import-RegFile {
     }
 
     try {
-        $process = Start-Process -FilePath 'reg.exe' `
-                                  -ArgumentList "import `"$Path`"" `
-                                  -NoNewWindow `
-                                  -Wait `
-                                  -PassThru
+        & reg.exe import $Path 2>&1 | Out-Null
+        $exitCode = $LASTEXITCODE
 
-        if ($process.ExitCode -eq 0) {
+        if ($exitCode -eq 0) {
             [pscustomobject]@{
                 Status  = $StatusCodes.Imported
                 File    = $Path
@@ -345,7 +342,7 @@ function Import-RegFile {
             [pscustomobject]@{
                 Status  = $StatusCodes.Failed
                 File    = $Path
-                Message = 'Exit code {0}' -f $process.ExitCode
+                Message = 'Exit code {0}' -f $exitCode
             }
         }
     } catch {
@@ -400,18 +397,6 @@ function Write-OperationResult {
         $StatusCodes.Imported {
             Write-Host ('Imported {0}' -f $Result.File)
         }
-        default {
-            $displayPath = if (Test-HasProperty -Object $Result -PropertyName 'Live') {
-                $Result.Live
-            } elseif (Test-HasProperty -Object $Result -PropertyName 'File') {
-                $Result.File
-            } elseif (Test-HasProperty -Object $Result -PropertyName 'Store') {
-                $Result.Store
-            } else {
-                '<unknown>'
-            }
-            Write-Host ('Failed {0}: Unknown status ''{1}''' -f $displayPath, $Result.Status)
-        }
     }
 }
 
@@ -461,24 +446,13 @@ function Process-FileMapping {
             $storePath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $file.store
             $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
 
-            if (-not (Test-Path -LiteralPath $storePath)) {
-                $result = [pscustomobject]@{
-                    Status  = $StatusCodes.Missing
-                    Store   = $storePath
-                    Live    = $null
-                    Message = 'Source not found'
-                }
-                Handle-OperationResult -Result $result -Counters $Counters
-                continue
-            }
-
             $result = Copy-File -Store $storePath -Live $livePath
             Handle-OperationResult -Result $result -Counters $Counters
         } catch {
             $result = [pscustomobject]@{
                 Status  = $StatusCodes.Failed
-                Store   = $file.live
-                Live    = $null
+                Store   = $file.store
+                Live    = $file.live
                 Message = $_.Exception.Message
             }
             Handle-OperationResult -Result $result -Counters $Counters
@@ -504,17 +478,6 @@ function Process-DirectoryMapping {
             $storeDirectory = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $directory.store
             $liveDirectory = Normalize-Path (Expand-EnvTokens -Text $directory.live)
 
-            if (-not (Test-Path -LiteralPath $storeDirectory)) {
-                $result = [pscustomobject]@{
-                    Status  = $StatusCodes.Missing
-                    Store   = $storeDirectory
-                    Live    = $null
-                    Message = 'Source folder not found'
-                }
-                Handle-OperationResult -Result $result -Counters $Counters
-                continue
-            }
-
             $directoryResult = Copy-Directory -Store $storeDirectory -Live $liveDirectory
             foreach ($result in $directoryResult.Results) {
                 Handle-OperationResult -Result $result -Counters $Counters
@@ -522,8 +485,8 @@ function Process-DirectoryMapping {
         } catch {
             $result = [pscustomobject]@{
                 Status  = $StatusCodes.Failed
-                Store   = $directory.live
-                Live    = $null
+                Store   = $directory.store
+                Live    = $directory.live
                 Message = $_.Exception.Message
             }
             Handle-OperationResult -Result $result -Counters $Counters
@@ -545,41 +508,28 @@ function Process-RegistryFiles {
         return
     }
 
-    if (-not $IsElevated) {
-        # Skip all registry imports if not elevated.
-        foreach ($registryFile in $program.registryFiles) {
-            try {
-                $registryPath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $registryFile
+    foreach ($registryFile in $program.registryFiles) {
+        try {
+            $registryPath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $registryFile
+
+            if (-not $IsElevated) {
                 $result = [pscustomobject]@{
                     Status  = $StatusCodes.Skipped
                     File    = $registryPath
                     Message = 'Requires elevation'
                 }
-                Handle-OperationResult -Result $result -Counters $Counters
-            } catch {
-                $result = [pscustomobject]@{
-                    Status  = $StatusCodes.Failed
-                    File    = $registryFile
-                    Message = $_.Exception.Message
-                }
-                Handle-OperationResult -Result $result -Counters $Counters
-            }
-        }
-    } else {
-        # Process registry imports when elevated.
-        foreach ($registryFile in $program.registryFiles) {
-            try {
-                $registryPath = Resolve-StorePath -ProgramStoreRoot $ProgramContext.ProgramStoreRoot -RelativePath $registryFile
+            } else {
                 $result = Import-RegFile -Path $registryPath
-                Handle-OperationResult -Result $result -Counters $Counters
-            } catch {
-                $result = [pscustomobject]@{
-                    Status  = $StatusCodes.Failed
-                    File    = $registryFile
-                    Message = $_.Exception.Message
-                }
-                Handle-OperationResult -Result $result -Counters $Counters
             }
+
+            Handle-OperationResult -Result $result -Counters $Counters
+        } catch {
+            $result = [pscustomobject]@{
+                Status  = $StatusCodes.Failed
+                File    = $registryFile
+                Message = $_.Exception.Message
+            }
+            Handle-OperationResult -Result $result -Counters $Counters
         }
     }
 }
@@ -621,9 +571,6 @@ function Invoke-ProgramRestore {
     Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $counters
     Process-RegistryFiles -ProgramContext $ProgramContext -Counters $counters -IsElevated $IsElevated
     Show-ManualItems -ProgramContext $ProgramContext
-
-    Write-Host ('Summary: succeeded={0} skipped={1} missing={2} failed={3}' -f
-                $counters.Succeeded, $counters.Skipped, $counters.Missing, $counters.Failed)
 
     return $counters
 }
