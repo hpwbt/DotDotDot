@@ -329,8 +329,15 @@ function Import-RegFile {
     }
 
     try {
-        $null = & reg.exe import $Path 2>&1
-        $exitCode = $LASTEXITCODE
+        # Temporarily allow stderr output without throwing exceptions
+        $savedErrorAction = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            $output = & reg.exe import $Path 2>&1
+            $exitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $savedErrorAction
+        }
 
         if ($exitCode -eq 0) {
             [pscustomobject]@{
@@ -339,10 +346,23 @@ function Import-RegFile {
                 Message = $null
             }
         } else {
+            # Extract actual error message from output
+            $errorMessage = if ($output) {
+                ($output | Where-Object { $_ -match 'ERROR:' -or $_ -is [System.Management.Automation.ErrorRecord] } |
+                 ForEach-Object { if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
+                 Select-Object -First 1)
+            } else {
+                'Registry import failed with exit code {0}' -f $exitCode
+            }
+
+            if (-not $errorMessage) {
+                $errorMessage = 'Registry import failed with exit code {0}' -f $exitCode
+            }
+
             [pscustomobject]@{
                 Status  = $StatusCodes.Failed
                 File    = $Path
-                Message = 'Exit code {0}' -f $exitCode
+                Message = $errorMessage
             }
         }
     } catch {
@@ -676,10 +696,19 @@ foreach ($context in $ProgramContexts) {
 }
 
 # Print overall results.
-Write-Host ("`nSucceeded={0}" -f $Totals.Succeeded)
+Write-Host ""
+Write-Host ("Succeeded={0}" -f $Totals.Succeeded)
 Write-Host ("Skipped={0}"   -f $Totals.Skipped)
 Write-Host ("Missing={0}"   -f $Totals.Missing)
 Write-Host ("Failed={0}"    -f $Totals.Failed)
+
+# Print final summary message.
+Write-Host ""
+if ($Totals.Failed -gt 0) {
+    Write-Host "One or more steps failed." -ForegroundColor Red
+} else {
+    Write-Host "All steps completed successfully." -ForegroundColor Green
+}
 
 # Exit with appropriate status.
 exit ([int]($Totals.Failed -gt 0))
