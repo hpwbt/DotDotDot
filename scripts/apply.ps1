@@ -38,6 +38,15 @@ function Test-HasProperty {
     $null -ne $Object.PSObject.Properties[$PropertyName]
 }
 
+# Check if property exists and has a truthy value.
+function Test-PropertyPopulated {
+    param(
+        [Parameter(Mandatory=$true)]$Object,
+        [Parameter(Mandatory=$true)][string]$PropertyName
+    )
+    (Test-HasProperty -Object $Object -PropertyName $PropertyName) -and $Object.$PropertyName
+}
+
 # Validate that an object has a required property.
 function Test-PropertyExists {
     param(
@@ -97,6 +106,25 @@ function Assert-MappingObject {
     Test-PropertyExists -Object $Mapping -PropertyName 'store' -Context "$MappingType mapping"
     Test-NonEmptyString -Value $Mapping.live -PropertyName 'live path' -Context "$MappingType mapping"
     Test-NonEmptyString -Value $Mapping.store -PropertyName 'store path' -Context "$MappingType mapping"
+}
+
+# Validate a list property with custom item validation.
+function Assert-ListProperty {
+    param(
+        [Parameter(Mandatory=$true)]$Object,
+        [Parameter(Mandatory=$true)][string]$PropertyName,
+        [Parameter(Mandatory=$true)][string]$Context,
+        [Parameter(Mandatory=$true)][scriptblock]$ItemValidator
+    )
+
+    if (-not (Test-PropertyPopulated -Object $Object -PropertyName $PropertyName)) {
+        return
+    }
+
+    Test-IsList -Value $Object.$PropertyName -PropertyName $PropertyName -Context $Context
+    foreach ($item in $Object.$PropertyName) {
+        & $ItemValidator $item
+    }
 }
 
 # Expand environment variable tokens in text.
@@ -450,6 +478,51 @@ function Handle-OperationResult {
     Update-Counters -Result $Result -Counters $Counters
 }
 
+# Process items from a property with error handling per item.
+function Invoke-ItemProcessor {
+    param(
+        [Parameter(Mandatory=$true)][psobject]$ProgramContext,
+        [Parameter(Mandatory=$true)][hashtable]$Counters,
+        [Parameter(Mandatory=$true)][string]$PropertyName,
+        [Parameter(Mandatory=$true)][scriptblock]$ItemProcessor
+    )
+
+    $programDefinition = $ProgramContext.Definition
+
+    if (-not (Test-PropertyPopulated -Object $programDefinition -PropertyName $PropertyName)) {
+        return
+    }
+
+    foreach ($item in $programDefinition.$PropertyName) {
+        try {
+            $results = @(& $ItemProcessor $item $ProgramContext)
+            foreach ($result in $results) {
+                Handle-OperationResult -Result $result -Counters $Counters
+            }
+        } catch {
+            $errorResult = [pscustomobject]@{
+                Status  = $StatusCodes.Failed
+                Message = $_.Exception.Message
+            }
+
+            # Add contextual properties based on item type.
+            if ($item -is [PSCustomObject] -or $item -is [hashtable]) {
+                if (Test-HasProperty -Object $item -PropertyName 'store') {
+                    $errorResult | Add-Member -NotePropertyName 'Store' -NotePropertyValue $item.store
+                }
+                if (Test-HasProperty -Object $item -PropertyName 'live') {
+                    $errorResult | Add-Member -NotePropertyName 'Live' -NotePropertyValue $item.live
+                }
+            } else {
+                # Assume it's a file path string.
+                $errorResult | Add-Member -NotePropertyName 'File' -NotePropertyValue $item
+            }
+
+            Handle-OperationResult -Result $errorResult -Counters $Counters
+        }
+    }
+}
+
 # Process file mappings for a program.
 function Process-FileMapping {
     param(
@@ -457,28 +530,11 @@ function Process-FileMapping {
         [Parameter(Mandatory=$true)][hashtable]$Counters
     )
 
-    $programDefinition = $ProgramContext.Definition
-
-    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'files') -or -not $programDefinition.files) {
-        return
-    }
-
-    foreach ($file in $programDefinition.files) {
-        try {
-            $storePath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $file.store
-            $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
-
-            $result = Copy-File -StorePath $storePath -LivePath $livePath
-            Handle-OperationResult -Result $result -Counters $Counters
-        } catch {
-            $result = [pscustomobject]@{
-                Status  = $StatusCodes.Failed
-                Store   = $file.store
-                Live    = $file.live
-                Message = $_.Exception.Message
-            }
-            Handle-OperationResult -Result $result -Counters $Counters
-        }
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'files' -ItemProcessor {
+        param($file, $context)
+        $storePath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $file.store
+        $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
+        Copy-File -StorePath $storePath -LivePath $livePath
     }
 }
 
@@ -489,30 +545,14 @@ function Process-DirectoryMapping {
         [Parameter(Mandatory=$true)][hashtable]$Counters
     )
 
-    $programDefinition = $ProgramContext.Definition
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'directories' -ItemProcessor {
+        param($directory, $context)
+        $storeDirPath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $directory.store
+        $liveDirPath = Normalize-Path (Expand-EnvTokens -Text $directory.live)
+        $directoryResult = Copy-Directory -StorePath $storeDirPath -LivePath $liveDirPath
 
-    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'directories') -or -not $programDefinition.directories) {
-        return
-    }
-
-    foreach ($directory in $programDefinition.directories) {
-        try {
-            $storeDirPath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $directory.store
-            $liveDirPath = Normalize-Path (Expand-EnvTokens -Text $directory.live)
-
-            $directoryResult = Copy-Directory -StorePath $storeDirPath -LivePath $liveDirPath
-            foreach ($result in $directoryResult.Results) {
-                Handle-OperationResult -Result $result -Counters $Counters
-            }
-        } catch {
-            $result = [pscustomobject]@{
-                Status  = $StatusCodes.Failed
-                Store   = $directory.store
-                Live    = $directory.live
-                Message = $_.Exception.Message
-            }
-            Handle-OperationResult -Result $result -Counters $Counters
-        }
+        # Return all individual file results.
+        $directoryResult.Results
     }
 }
 
@@ -524,47 +564,29 @@ function Process-RegistryFiles {
         [Parameter(Mandatory=$true)][bool]$HasAdminRights
     )
 
-    $programDefinition = $ProgramContext.Definition
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'registryFiles' -ItemProcessor {
+        param($registryFile, $context)
+        $registryFilePath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $registryFile
 
-    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'registryFiles') -or -not $programDefinition.registryFiles) {
-        return
-    }
-
-    foreach ($registryFile in $programDefinition.registryFiles) {
-        try {
-            $registryFilePath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $registryFile
-
-            if (-not $HasAdminRights) {
-                $result = [pscustomobject]@{
-                    Status  = $StatusCodes.Skipped
-                    File    = $registryFilePath
-                    Message = 'Requires elevation.'
-                }
-            } else {
-                $result = Import-RegFile -FilePath $registryFilePath
+        if (-not $HasAdminRights) {
+            [pscustomobject]@{
+                Status  = $StatusCodes.Skipped
+                File    = $registryFilePath
+                Message = 'Requires elevation.'
             }
-
-            Handle-OperationResult -Result $result -Counters $Counters
-        } catch {
-            $result = [pscustomobject]@{
-                Status  = $StatusCodes.Failed
-                File    = $registryFile
-                Message = $_.Exception.Message
-            }
-            Handle-OperationResult -Result $result -Counters $Counters
+        } else {
+            Import-RegFile -FilePath $registryFilePath
         }
     }
 }
 
 # Display manual checklist items for a program.
 function Show-ManualItems {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$ProgramContext
-    )
+    param([Parameter(Mandatory=$true)][psobject]$ProgramContext)
 
     $programDefinition = $ProgramContext.Definition
 
-    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'manual') -or -not $programDefinition.manual) {
+    if (-not (Test-PropertyPopulated -Object $programDefinition -PropertyName 'manual')) {
         return
     }
 
@@ -633,37 +655,29 @@ foreach ($programDef in $ProgramDefinitions) {
     Test-NonEmptyString -Value $programDef.name -PropertyName 'name' -Context 'Program entry'
 
     # Validate file mappings if present.
-    if (Test-HasProperty -Object $programDef -PropertyName 'files') {
-        Test-IsList -Value $programDef.files -PropertyName 'files' -Context 'Program entry'
-        foreach ($file in $programDef.files) {
-            Assert-MappingObject -Mapping $file -MappingType 'File'
-        }
+    Assert-ListProperty -Object $programDef -PropertyName 'files' -Context 'Program entry' -ItemValidator {
+        param($file)
+        Assert-MappingObject -Mapping $file -MappingType 'File'
     }
 
     # Validate directory mappings if present.
-    if (Test-HasProperty -Object $programDef -PropertyName 'directories') {
-        Test-IsList -Value $programDef.directories -PropertyName 'directories' -Context 'Program entry'
-        foreach ($directory in $programDef.directories) {
-            Assert-MappingObject -Mapping $directory -MappingType 'Directory'
-        }
+    Assert-ListProperty -Object $programDef -PropertyName 'directories' -Context 'Program entry' -ItemValidator {
+        param($directory)
+        Assert-MappingObject -Mapping $directory -MappingType 'Directory'
     }
 
     # Validate manual checklist if present.
-    if (Test-HasProperty -Object $programDef -PropertyName 'manual') {
-        Test-IsList -Value $programDef.manual -PropertyName 'manual' -Context 'Program entry'
-        foreach ($manualItem in $programDef.manual) {
-            Test-NonEmptyString -Value $manualItem -PropertyName 'manual item' -Context 'Manual checklist'
-        }
+    Assert-ListProperty -Object $programDef -PropertyName 'manual' -Context 'Program entry' -ItemValidator {
+        param($manualItem)
+        Test-NonEmptyString -Value $manualItem -PropertyName 'manual item' -Context 'Manual checklist'
     }
 
     # Validate registry files if present.
-    if (Test-HasProperty -Object $programDef -PropertyName 'registryFiles') {
-        Test-IsList -Value $programDef.registryFiles -PropertyName 'registryFiles' -Context 'Program entry'
-        foreach ($registryFile in $programDef.registryFiles) {
-            Test-NonEmptyString -Value $registryFile -PropertyName 'registry file' -Context 'Registry file list'
-            if (-not ($registryFile.ToString().ToLowerInvariant().EndsWith('.reg'))) {
-                throw "Registry file entry must end with .reg."
-            }
+    Assert-ListProperty -Object $programDef -PropertyName 'registryFiles' -Context 'Program entry' -ItemValidator {
+        param($registryFile)
+        Test-NonEmptyString -Value $registryFile -PropertyName 'registry file' -Context 'Registry file list'
+        if (-not ($registryFile.ToString().ToLowerInvariant().EndsWith('.reg'))) {
+            throw "Registry file entry must end with .reg."
         }
     }
 }
