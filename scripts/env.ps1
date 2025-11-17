@@ -1,14 +1,14 @@
-Set-StrictMode -Version 3.0
+Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 # Locate LibreWolf profiles directory.
-$ProfilesRoot = Join-Path $env:APPDATA 'LibreWolf\Profiles'
-if (-not (Test-Path -LiteralPath $ProfilesRoot)) {
+$ProfilesPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
+if (-not (Test-Path -LiteralPath $ProfilesPath)) {
     throw "LibreWolf profiles directory not found."
 }
 
 # Find exactly one *.default-default profile.
-$ProfileMatches = @(Get-ChildItem -Path $ProfilesRoot -Directory -Filter '*.default-default')
+$ProfileMatches = @(Get-ChildItem -Path $ProfilesPath -Directory -Filter '*.default-default')
 if ($ProfileMatches.Count -eq 0) { throw "No *.default-default profile found." }
 if ($ProfileMatches.Count -gt 1) { throw "Multiple default-default profiles found." }
 
