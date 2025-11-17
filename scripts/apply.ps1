@@ -12,14 +12,14 @@ $StatusCodes = @{
 
 # Resolve repository paths.
 $ScriptDirPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$ParentDirPath = Split-Path $ScriptDirPath -Parent
-$MapPath       = Join-Path $ParentDirPath "map.json"
+$DotfilesRootPath = Split-Path $ScriptDirPath -Parent
+$MapPath = Join-Path $DotfilesRootPath "map.json"
 
 # Verify we're running from inside %USERPROFILE%\Dotfiles.
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
-if ($ParentDirPath -ne $ExpectedDirPath) {
+if ($DotfilesRootPath -ne $ExpectedDirPath) {
     Write-Host ("`nError: This script must be run from inside '{0}'." -f $ExpectedDirPath) -ForegroundColor Red
-    Write-Host ("Current location: {0}." -f $ParentDirPath)
+    Write-Host ("Current location: {0}." -f $DotfilesRootPath)
     Write-Host ("Expected location: {0}." -f $ExpectedDirPath)
     exit 1
 }
@@ -151,17 +151,17 @@ function Normalize-Path {
     [System.IO.Path]::GetFullPath($windowsPath)
 }
 
-# Resolve a path inside the program's store folder and block path traversal.
+# Resolve a path inside the program's base folder and block path traversal.
 function Resolve-StorePath {
     param(
-        [Parameter(Mandatory=$true)][string]$ProgramStoreRootPath,
+        [Parameter(Mandatory=$true)][string]$ProgramBasePath,
         [Parameter(Mandatory=$true)][string]$RelativePath
     )
 
     $normalizedRelative = $RelativePath -replace '/', '\'
-    $combinedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ProgramStoreRootPath, $normalizedRelative))
+    $combinedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ProgramBasePath, $normalizedRelative))
 
-    if (-not $combinedPath.StartsWith($ProgramStoreRootPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+    if (-not $combinedPath.StartsWith($ProgramBasePath, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Store path escapes the program's store folder: $RelativePath."
     }
 
@@ -532,7 +532,7 @@ function Process-FileMapping {
 
     Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'files' -ItemProcessor {
         param($file, $context)
-        $storePath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $file.store
+        $storePath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $file.store
         $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
         Copy-File -StorePath $storePath -LivePath $livePath
     }
@@ -547,7 +547,7 @@ function Process-DirectoryMapping {
 
     Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'directories' -ItemProcessor {
         param($directory, $context)
-        $storeDirPath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $directory.store
+        $storeDirPath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $directory.store
         $liveDirPath = Normalize-Path (Expand-EnvTokens -Text $directory.live)
         $directoryResult = Copy-Directory -StorePath $storeDirPath -LivePath $liveDirPath
 
@@ -566,7 +566,7 @@ function Process-RegistryFiles {
 
     Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'registryFiles' -ItemProcessor {
         param($registryFile, $context)
-        $registryFilePath = Resolve-StorePath -ProgramStoreRootPath $context.ProgramStoreRootPath -RelativePath $registryFile
+        $registryFilePath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $registryFile
 
         if (-not $HasAdminRights) {
             [pscustomobject]@{
@@ -685,15 +685,15 @@ foreach ($programDef in $ProgramDefinitions) {
 # Expand and normalize the store root.
 $StoreRootPath = Normalize-Path (Expand-EnvTokens -Text ([string]$Config.storeRoot))
 
-# Prepare program contexts with computed store folders.
+# Prepare program contexts with computed base paths.
 $ProgramContexts = foreach ($programDef in $ProgramDefinitions) {
     $programSubdirName = $programDef.name -replace '/', '\'
-    $programStoreRootPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($StoreRootPath, $programSubdirName))
+    $programBasePath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($StoreRootPath, $programSubdirName))
 
     [pscustomobject]@{
-        Definition           = $programDef
-        Name                 = $programDef.name
-        ProgramStoreRootPath = $programStoreRootPath
+        Definition      = $programDef
+        Name            = $programDef.name
+        ProgramBasePath = $programBasePath
     }
 }
 
