@@ -15,18 +15,18 @@ $ScriptDirPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $ParentDirPath = Split-Path $ScriptDirPath -Parent
 $MapPath       = Join-Path $ParentDirPath "map.json"
 
-# Verify we're running from inside %USERPROFILE%\Dotfiles
+# Verify we're running from inside %USERPROFILE%\Dotfiles.
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
 if ($ParentDirPath -ne $ExpectedDirPath) {
     Write-Host ("`nError: This script must be run from inside '{0}'." -f $ExpectedDirPath) -ForegroundColor Red
-    Write-Host ("Current location: {0}" -f $ParentDirPath)
-    Write-Host ("Expected location: {0}" -f $ExpectedDirPath)
+    Write-Host ("Current location: {0}." -f $ParentDirPath)
+    Write-Host ("Expected location: {0}." -f $ExpectedDirPath)
     exit 1
 }
 
 # Require presence of the configuration file.
 if (-not (Test-Path -LiteralPath $MapPath)) {
-    throw "Map configuration file not found at: $MapPath"
+    throw "Map configuration file not found at: $MapPath."
 }
 
 # Check if an object has a specific property.
@@ -46,7 +46,7 @@ function Test-PropertyExists {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not (Test-HasProperty -Object $Object -PropertyName $PropertyName)) {
-        throw "$Context lacks a $PropertyName"
+        throw "$Context lacks a $PropertyName."
     }
 }
 
@@ -58,7 +58,7 @@ function Test-NonEmptyString {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [string]) -or [string]::IsNullOrWhiteSpace($Value)) {
-        throw "$Context $PropertyName must be a non-empty text value"
+        throw "$Context $PropertyName must be a non-empty text value."
     }
 }
 
@@ -70,7 +70,7 @@ function Test-IsList {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [System.Collections.IEnumerable]) -or ($Value -is [string])) {
-        throw "$Context $PropertyName must be provided as a list"
+        throw "$Context $PropertyName must be provided as a list."
     }
 }
 
@@ -81,7 +81,7 @@ function Test-IsObject {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if ($Value -isnot [PSCustomObject] -and $Value -isnot [hashtable]) {
-        throw "$Context must be an object"
+        throw "$Context must be an object."
     }
 }
 
@@ -109,7 +109,7 @@ function Expand-EnvTokens {
         $variableName = $match.Groups[1].Value
         $variableValue = [Environment]::GetEnvironmentVariable($variableName)
         if ($null -eq $variableValue) {
-            throw "Unknown environment variable: $variableName"
+            throw "Unknown environment variable: $variableName."
         }
         $variableValue
     })
@@ -134,7 +134,7 @@ function Resolve-StorePath {
     $combinedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ProgramStoreRootPath, $normalizedRelative))
 
     if (-not $combinedPath.StartsWith($ProgramStoreRootPath, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Store path escapes the program's store folder: $RelativePath"
+        throw "Store path escapes the program's store folder: $RelativePath."
     }
 
     $combinedPath
@@ -147,7 +147,7 @@ function Test-IsElevated {
         $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
         $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     } catch {
-        throw "Failed to determine elevation state"
+        throw "Failed to determine elevation state."
     }
 }
 
@@ -179,38 +179,38 @@ function Clear-ReadOnly {
             [System.IO.File]::SetAttributes($FilePath, $attributes -bxor [System.IO.FileAttributes]::ReadOnly)
         }
     } catch {
-        throw "Failed to clear read-only attribute"
+        throw "Failed to clear read-only attribute."
     }
 }
 
 # Compare two files by size, modification time, and optionally by hash.
 function Compare-Files {
     param(
-        [Parameter(Mandatory=$true)][string]$FilePathA,
-        [Parameter(Mandatory=$true)][string]$FilePathB,
+        [Parameter(Mandatory=$true)][string]$SourceFilePath,
+        [Parameter(Mandatory=$true)][string]$TargetFilePath,
         [switch]$UseHash
     )
 
-    if (-not (Test-Path -LiteralPath $FilePathA) -or -not (Test-Path -LiteralPath $FilePathB)) {
+    if (-not (Test-Path -LiteralPath $SourceFilePath) -or -not (Test-Path -LiteralPath $TargetFilePath)) {
         return $false
     }
 
-    $fileA = Get-Item -LiteralPath $FilePathA -Force
-    $fileB = Get-Item -LiteralPath $FilePathB -Force
+    $sourceFile = Get-Item -LiteralPath $SourceFilePath -Force
+    $targetFile = Get-Item -LiteralPath $TargetFilePath -Force
 
-    if ($fileA.Length -ne $fileB.Length) {
+    if ($sourceFile.Length -ne $targetFile.Length) {
         return $false
     }
 
     # Without hash comparison, different timestamps indicate different files.
-    if ($fileA.LastWriteTimeUtc -ne $fileB.LastWriteTimeUtc -and -not $UseHash) {
+    if ($sourceFile.LastWriteTimeUtc -ne $targetFile.LastWriteTimeUtc -and -not $UseHash) {
         return $false
     }
 
     if ($UseHash) {
-        $hashA = Get-FileHash -LiteralPath $FilePathA -Algorithm SHA256
-        $hashB = Get-FileHash -LiteralPath $FilePathB -Algorithm SHA256
-        return $hashA.Hash -eq $hashB.Hash
+        $hashSource = Get-FileHash -LiteralPath $SourceFilePath -Algorithm SHA256
+        $hashTarget = Get-FileHash -LiteralPath $TargetFilePath -Algorithm SHA256
+        return $hashSource.Hash -eq $hashTarget.Hash
     }
 
     return $true
@@ -228,7 +228,7 @@ function Copy-File {
             Status  = $StatusCodes.Missing
             Store   = $StorePath
             Live    = $LivePath
-            Message = 'Source not found'
+            Message = 'Source not found.'
         }
     }
 
@@ -236,12 +236,12 @@ function Copy-File {
         Ensure-ParentDirectory -FilePath $LivePath
 
         if (Test-Path -LiteralPath $LivePath) {
-            if (Compare-Files -FilePathA $StorePath -FilePathB $LivePath) {
+            if (Compare-Files -SourceFilePath $StorePath -TargetFilePath $LivePath) {
                 return [pscustomobject]@{
                     Status  = $StatusCodes.Skipped
                     Store   = $StorePath
                     Live    = $LivePath
-                    Message = 'Already identical'
+                    Message = 'Already identical.'
                 }
             }
             Clear-ReadOnly -FilePath $LivePath
@@ -278,7 +278,7 @@ function Copy-Directory {
                 Status  = $StatusCodes.Missing
                 Store   = $StorePath
                 Live    = $LivePath
-                Message = 'Source folder not found'
+                Message = 'Source folder not found.'
             })
         }
     }
@@ -318,7 +318,7 @@ function Import-RegFile {
         return [pscustomobject]@{
             Status  = $StatusCodes.Missing
             File    = $FilePath
-            Message = 'File not found'
+            Message = 'File not found.'
         }
     }
 
@@ -326,12 +326,12 @@ function Import-RegFile {
         return [pscustomobject]@{
             Status  = $StatusCodes.Failed
             File    = $FilePath
-            Message = 'File must end with .reg'
+            Message = 'File must end with .reg.'
         }
     }
 
     try {
-        # Temporarily allow stderr output without throwing exceptions
+        # Temporarily allow stderr output without throwing exceptions.
         $savedErrorAction = $ErrorActionPreference
         try {
             $ErrorActionPreference = 'Continue'
@@ -348,17 +348,17 @@ function Import-RegFile {
                 Message = $null
             }
         } else {
-            # Extract actual error message from output
+            # Extract actual error message from output.
             $errorMessage = if ($output) {
                 ($output | Where-Object { $_ -match 'ERROR:' -or $_ -is [System.Management.Automation.ErrorRecord] } |
                  ForEach-Object { if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
                  Select-Object -First 1)
             } else {
-                'Registry import failed with exit code {0}' -f $exitCode
+                'Registry import failed with exit code {0}.' -f $exitCode
             }
 
             if (-not $errorMessage) {
-                $errorMessage = 'Registry import failed with exit code {0}' -f $exitCode
+                $errorMessage = 'Registry import failed with exit code {0}.' -f $exitCode
             }
 
             [pscustomobject]@{
@@ -385,23 +385,23 @@ function Write-OperationResult {
     switch ($Result.Status) {
         $StatusCodes.Succeeded {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
-                Write-Host ('Succeeded {0} -> {1}' -f $Result.Store, $Result.Live)
+                Write-Host ('Succeeded {0} -> {1}.' -f $Result.Store, $Result.Live)
             } else {
-                Write-Host ('Succeeded {0}' -f $Result.File)
+                Write-Host ('Succeeded {0}.' -f $Result.File)
             }
         }
         $StatusCodes.Skipped {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
-                Write-Host ('Skipped {0}' -f $Result.Live)
+                Write-Host ('Skipped {0}.' -f $Result.Live)
             } else {
-                Write-Host ('Skipped {0}' -f $Result.File)
+                Write-Host ('Skipped {0}.' -f $Result.File)
             }
         }
         $StatusCodes.Missing {
             if (Test-HasProperty -Object $Result -PropertyName 'Store') {
-                Write-Host ('Missing {0}' -f $Result.Store)
+                Write-Host ('Missing {0}.' -f $Result.Store)
             } else {
-                Write-Host ('Missing {0}' -f $Result.File)
+                Write-Host ('Missing {0}.' -f $Result.File)
             }
         }
         $StatusCodes.Failed {
@@ -414,10 +414,10 @@ function Write-OperationResult {
             } else {
                 '<unknown>'
             }
-            Write-Host ('Failed {0}: {1}' -f $displayPath, $Result.Message)
+            Write-Host ('Failed {0}: {1}.' -f $displayPath, $Result.Message)
         }
         $StatusCodes.Imported {
-            Write-Host ('Imported {0}' -f $Result.File)
+            Write-Host ('Imported {0}.' -f $Result.File)
         }
     }
 }
@@ -457,13 +457,13 @@ function Process-FileMapping {
         [Parameter(Mandatory=$true)][hashtable]$Counters
     )
 
-    $program = $ProgramContext.Spec
+    $programDefinition = $ProgramContext.Definition
 
-    if (-not (Test-HasProperty -Object $program -PropertyName 'files') -or -not $program.files) {
+    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'files') -or -not $programDefinition.files) {
         return
     }
 
-    foreach ($file in $program.files) {
+    foreach ($file in $programDefinition.files) {
         try {
             $storePath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $file.store
             $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
@@ -489,13 +489,13 @@ function Process-DirectoryMapping {
         [Parameter(Mandatory=$true)][hashtable]$Counters
     )
 
-    $program = $ProgramContext.Spec
+    $programDefinition = $ProgramContext.Definition
 
-    if (-not (Test-HasProperty -Object $program -PropertyName 'directories') -or -not $program.directories) {
+    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'directories') -or -not $programDefinition.directories) {
         return
     }
 
-    foreach ($directory in $program.directories) {
+    foreach ($directory in $programDefinition.directories) {
         try {
             $storeDirPath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $directory.store
             $liveDirPath = Normalize-Path (Expand-EnvTokens -Text $directory.live)
@@ -521,24 +521,24 @@ function Process-RegistryFiles {
     param(
         [Parameter(Mandatory=$true)][psobject]$ProgramContext,
         [Parameter(Mandatory=$true)][hashtable]$Counters,
-        [Parameter(Mandatory=$true)][bool]$IsElevated
+        [Parameter(Mandatory=$true)][bool]$HasAdminRights
     )
 
-    $program = $ProgramContext.Spec
+    $programDefinition = $ProgramContext.Definition
 
-    if (-not (Test-HasProperty -Object $program -PropertyName 'registryFiles') -or -not $program.registryFiles) {
+    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'registryFiles') -or -not $programDefinition.registryFiles) {
         return
     }
 
-    foreach ($registryFile in $program.registryFiles) {
+    foreach ($registryFile in $programDefinition.registryFiles) {
         try {
             $registryFilePath = Resolve-StorePath -ProgramStoreRootPath $ProgramContext.ProgramStoreRootPath -RelativePath $registryFile
 
-            if (-not $IsElevated) {
+            if (-not $HasAdminRights) {
                 $result = [pscustomobject]@{
                     Status  = $StatusCodes.Skipped
                     File    = $registryFilePath
-                    Message = 'Requires elevation'
+                    Message = 'Requires elevation.'
                 }
             } else {
                 $result = Import-RegFile -FilePath $registryFilePath
@@ -562,13 +562,13 @@ function Show-ManualItems {
         [Parameter(Mandatory=$true)][psobject]$ProgramContext
     )
 
-    $program = $ProgramContext.Spec
+    $programDefinition = $ProgramContext.Definition
 
-    if (-not (Test-HasProperty -Object $program -PropertyName 'manual') -or -not $program.manual) {
+    if (-not (Test-HasProperty -Object $programDefinition -PropertyName 'manual') -or -not $programDefinition.manual) {
         return
     }
 
-    foreach ($manualItem in $program.manual) {
+    foreach ($manualItem in $programDefinition.manual) {
         Write-Host ('- {0}' -f $manualItem)
     }
 }
@@ -577,10 +577,10 @@ function Show-ManualItems {
 function Invoke-ProgramRestore {
     param(
         [Parameter(Mandatory=$true)][psobject]$ProgramContext,
-        [Parameter(Mandatory=$true)][bool]$IsElevated
+        [Parameter(Mandatory=$true)][bool]$HasAdminRights
     )
 
-    $counters = @{
+    $programCounters = @{
         Succeeded = 0
         Skipped   = 0
         Missing   = 0
@@ -589,16 +589,16 @@ function Invoke-ProgramRestore {
 
     Write-Host ("`n{0}" -f $ProgramContext.Name)
 
-    Process-FileMapping -ProgramContext $ProgramContext -Counters $counters
-    Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $counters
-    Process-RegistryFiles -ProgramContext $ProgramContext -Counters $counters -IsElevated $IsElevated
+    Process-FileMapping -ProgramContext $ProgramContext -Counters $programCounters
+    Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $programCounters
+    Process-RegistryFiles -ProgramContext $ProgramContext -Counters $programCounters -HasAdminRights $HasAdminRights
     Show-ManualItems -ProgramContext $ProgramContext
 
-    return $counters
+    return $programCounters
 }
 
 # Prepare global tallies.
-$Totals = @{
+$OverallCounters = @{
     Succeeded = 0
     Skipped   = 0
     Missing   = 0
@@ -606,63 +606,63 @@ $Totals = @{
 }
 
 # Read and parse the map configuration.
-$ConfigJson = Get-Content -LiteralPath $MapPath -Raw -Encoding UTF8
+$ConfigText = Get-Content -LiteralPath $MapPath -Raw -Encoding UTF8
 try {
-    $Config = $ConfigJson | ConvertFrom-Json -ErrorAction Stop
+    $Config = $ConfigText | ConvertFrom-Json -ErrorAction Stop
 } catch {
-    throw "Map configuration could not be parsed"
+    throw "Map configuration could not be parsed."
 }
 
 # Validate store root.
 if (-not (Test-HasProperty -Object $Config -PropertyName 'storeRoot')) {
-    throw "Map configuration lacks a defined store root"
+    throw "Map configuration lacks a defined store root."
 }
 Test-NonEmptyString -Value $Config.storeRoot -PropertyName 'storeRoot' -Context 'Map configuration'
 
 # Validate programs list exists.
 if (-not (Test-HasProperty -Object $Config -PropertyName 'programs')) {
-    throw "Map configuration is missing a list of program entries"
+    throw "Map configuration is missing a list of program entries."
 }
 Test-IsList -Value $Config.programs -PropertyName 'programs' -Context 'Map configuration'
 
 # Validate each program entry.
-$Programs = @($Config.programs)
-foreach ($program in $Programs) {
-    Test-IsObject -Value $program -Context 'Program entry'
-    Test-PropertyExists -Object $program -PropertyName 'name' -Context 'Program entry'
-    Test-NonEmptyString -Value $program.name -PropertyName 'name' -Context 'Program entry'
+$ProgramDefinitions = @($Config.programs)
+foreach ($programDef in $ProgramDefinitions) {
+    Test-IsObject -Value $programDef -Context 'Program entry'
+    Test-PropertyExists -Object $programDef -PropertyName 'name' -Context 'Program entry'
+    Test-NonEmptyString -Value $programDef.name -PropertyName 'name' -Context 'Program entry'
 
     # Validate file mappings if present.
-    if (Test-HasProperty -Object $program -PropertyName 'files') {
-        Test-IsList -Value $program.files -PropertyName 'files' -Context 'Program entry'
-        foreach ($file in $program.files) {
+    if (Test-HasProperty -Object $programDef -PropertyName 'files') {
+        Test-IsList -Value $programDef.files -PropertyName 'files' -Context 'Program entry'
+        foreach ($file in $programDef.files) {
             Assert-MappingObject -Mapping $file -MappingType 'File'
         }
     }
 
     # Validate directory mappings if present.
-    if (Test-HasProperty -Object $program -PropertyName 'directories') {
-        Test-IsList -Value $program.directories -PropertyName 'directories' -Context 'Program entry'
-        foreach ($directory in $program.directories) {
+    if (Test-HasProperty -Object $programDef -PropertyName 'directories') {
+        Test-IsList -Value $programDef.directories -PropertyName 'directories' -Context 'Program entry'
+        foreach ($directory in $programDef.directories) {
             Assert-MappingObject -Mapping $directory -MappingType 'Directory'
         }
     }
 
     # Validate manual checklist if present.
-    if (Test-HasProperty -Object $program -PropertyName 'manual') {
-        Test-IsList -Value $program.manual -PropertyName 'manual' -Context 'Program entry'
-        foreach ($manualItem in $program.manual) {
+    if (Test-HasProperty -Object $programDef -PropertyName 'manual') {
+        Test-IsList -Value $programDef.manual -PropertyName 'manual' -Context 'Program entry'
+        foreach ($manualItem in $programDef.manual) {
             Test-NonEmptyString -Value $manualItem -PropertyName 'manual item' -Context 'Manual checklist'
         }
     }
 
     # Validate registry files if present.
-    if (Test-HasProperty -Object $program -PropertyName 'registryFiles') {
-        Test-IsList -Value $program.registryFiles -PropertyName 'registryFiles' -Context 'Program entry'
-        foreach ($registryFile in $program.registryFiles) {
+    if (Test-HasProperty -Object $programDef -PropertyName 'registryFiles') {
+        Test-IsList -Value $programDef.registryFiles -PropertyName 'registryFiles' -Context 'Program entry'
+        foreach ($registryFile in $programDef.registryFiles) {
             Test-NonEmptyString -Value $registryFile -PropertyName 'registry file' -Context 'Registry file list'
             if (-not ($registryFile.ToString().ToLowerInvariant().EndsWith('.reg'))) {
-                throw "Registry file entry must end with .reg"
+                throw "Registry file entry must end with .reg."
             }
         }
     }
@@ -672,36 +672,35 @@ foreach ($program in $Programs) {
 $StoreRootPath = Normalize-Path (Expand-EnvTokens -Text ([string]$Config.storeRoot))
 
 # Prepare program contexts with computed store folders.
-$ProgramContexts = foreach ($program in $Programs) {
-    $programStorePath = $program.name -replace '/', '\'
-    $programStoreRootPath = [System.IO.Path]::Combine($StoreRootPath, $programStorePath)
-    $programStoreRootPathFull = [System.IO.Path]::GetFullPath($programStoreRootPath)
+$ProgramContexts = foreach ($programDef in $ProgramDefinitions) {
+    $programSubdirName = $programDef.name -replace '/', '\'
+    $programStoreRootPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($StoreRootPath, $programSubdirName))
 
     [pscustomobject]@{
-        Spec                  = $program
-        Name                  = $program.name
-        ProgramStoreRootPath  = $programStoreRootPathFull
+        Definition           = $programDef
+        Name                 = $programDef.name
+        ProgramStoreRootPath = $programStoreRootPath
     }
 }
 
 # Cache elevation state for later decisions.
-$IsElevated = Test-IsElevated
+$HasAdminRights = Test-IsElevated
 
 # Process each program entry.
-foreach ($context in $ProgramContexts) {
-    $programCounters = Invoke-ProgramRestore -ProgramContext $context -IsElevated $IsElevated
+foreach ($programContext in $ProgramContexts) {
+    $programCounters = Invoke-ProgramRestore -ProgramContext $programContext -HasAdminRights $HasAdminRights
 
-    $Totals.Succeeded += $programCounters.Succeeded
-    $Totals.Skipped   += $programCounters.Skipped
-    $Totals.Missing   += $programCounters.Missing
-    $Totals.Failed    += $programCounters.Failed
+    $OverallCounters.Succeeded += $programCounters.Succeeded
+    $OverallCounters.Skipped   += $programCounters.Skipped
+    $OverallCounters.Missing   += $programCounters.Missing
+    $OverallCounters.Failed    += $programCounters.Failed
 }
 
 # Print overall results.
-Write-Host ("`nSucceeded={0}" -f $Totals.Succeeded)
-Write-Host ("Skipped={0}"   -f $Totals.Skipped)
-Write-Host ("Missing={0}"   -f $Totals.Missing)
-Write-Host ("Failed={0}"    -f $Totals.Failed)
+Write-Host ("`nSucceeded={0}." -f $OverallCounters.Succeeded)
+Write-Host ("Skipped={0}."   -f $OverallCounters.Skipped)
+Write-Host ("Missing={0}."   -f $OverallCounters.Missing)
+Write-Host ("Failed={0}."    -f $OverallCounters.Failed)
 
 # Exit with appropriate status.
-exit ([int](($Totals.Failed -gt 0) -or ($Totals.Missing -gt 0)))
+exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))

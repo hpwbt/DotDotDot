@@ -15,12 +15,12 @@ rem Display banner.
 
 rem Verify scripts exist.
 if not exist "%SCRIPTS%\env.ps1" (
-    powershell -NoProfile -Command "Write-Host 'Error: env.ps1 not found' -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host 'Error: env.ps1 not found.' -ForegroundColor Red"
     pause
     exit /b 1
 )
 if not exist "%SCRIPTS%\apply.ps1" (
-    powershell -NoProfile -Command "Write-Host 'Error: apply.ps1 not found' -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host 'Error: apply.ps1 not found.' -ForegroundColor Red"
     pause
     exit /b 1
 )

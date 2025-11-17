@@ -9,12 +9,18 @@ if (-not (Test-Path -LiteralPath $ProfilesPath)) {
 
 # Find exactly one *.default-default profile.
 $ProfileMatches = @(Get-ChildItem -Path $ProfilesPath -Directory -Filter '*.default-default')
-if ($ProfileMatches.Count -eq 0) { throw "No *.default-default profile found." }
-if ($ProfileMatches.Count -gt 1) { throw "Multiple default-default profiles found." }
+
+if ($ProfileMatches.Count -eq 0) {
+    throw "No *.default-default profile found."
+}
+
+if ($ProfileMatches.Count -gt 1) {
+    throw "Multiple default-default profiles found."
+}
 
 # Set LIBREPROFILE environment variable.
 $env:LIBREPROFILE = $ProfileMatches[0].FullName
 
 # Confirm success.
-Write-Host "`nEnvironment variable successfully set:" -ForegroundColor Green
-Write-Host "LIBREPROFILE = `"$env:LIBREPROFILE`""
+Write-Host "`nEnvironment variable successfully set." -ForegroundColor Green
+Write-Host ("LIBREPROFILE = `"{0}`"." -f $env:LIBREPROFILE)
