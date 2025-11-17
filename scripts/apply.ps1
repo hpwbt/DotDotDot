@@ -696,19 +696,10 @@ foreach ($context in $ProgramContexts) {
 }
 
 # Print overall results.
-Write-Host ""
-Write-Host ("Succeeded={0}" -f $Totals.Succeeded)
+Write-Host ("`nSucceeded={0}" -f $Totals.Succeeded)
 Write-Host ("Skipped={0}"   -f $Totals.Skipped)
 Write-Host ("Missing={0}"   -f $Totals.Missing)
 Write-Host ("Failed={0}"    -f $Totals.Failed)
-
-# Print final summary message.
-Write-Host ""
-if ($Totals.Failed -gt 0) {
-    Write-Host "One or more steps failed." -ForegroundColor Red
-} else {
-    Write-Host "All steps completed successfully." -ForegroundColor Green
-}
 
 # Exit with appropriate status.
 exit ([int]($Totals.Failed -gt 0))

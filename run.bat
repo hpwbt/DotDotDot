@@ -30,9 +30,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$ErrorActionPreference='Stop'; try { & '%SCRIPTS%\env.ps1'; & '%SCRIPTS%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 
 if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host '`nOne or more steps failed.' -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host \"`nOne or more steps failed.\" -ForegroundColor Red"
 ) else (
-    powershell -NoProfile -Command "Write-Host '`nAll steps succeeded.' -ForegroundColor Green"
+    powershell -NoProfile -Command "Write-Host \"`nAll steps succeeded.\" -ForegroundColor Green"
 )
 
 pause
