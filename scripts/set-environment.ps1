@@ -5,8 +5,6 @@ $ErrorActionPreference = 'Stop'
 $ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
 
 if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
-    Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host "LibreWolf not detected, related files will be skipped."
     exit 0
 }
 
@@ -14,8 +12,6 @@ if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
 $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
 
 if ($ProfileMatches.Count -eq 0) {
-    Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host "LibreWolf profile not found, related files will be skipped."
     exit 0
 }
 
