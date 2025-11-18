@@ -19,15 +19,18 @@ $MapPath = Join-Path $DotfilesRootPath 'map.json'
 # Verify we're running from inside %USERPROFILE%\Dotfiles.
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
 if ($DotfilesRootPath -ne $ExpectedDirPath) {
-    Write-Host ("`nError: This script must be run from inside '{0}'." -f $ExpectedDirPath) -ForegroundColor Red
+    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
+    Write-Host ("This script must be run from inside '{0}'." -f $ExpectedDirPath)
+    Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
     Write-Host ("Current location: {0}." -f $DotfilesRootPath)
+    Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
     Write-Host ("Expected location: {0}." -f $ExpectedDirPath)
     exit 1
 }
 
 # Verify the configuration file exists.
 if (-not (Test-Path -LiteralPath $MapPath)) {
-    throw "Map configuration file not found at: $MapPath."
+    throw "ERROR: Map configuration file not found at: $MapPath."
 }
 
 # Check if an object has a specific property.
@@ -56,7 +59,7 @@ function Test-PropertyExists {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not (Test-HasProperty -Object $Object -PropertyName $PropertyName)) {
-        throw "$Context lacks a $PropertyName."
+        throw "ERROR: $Context lacks a $PropertyName."
     }
 }
 
@@ -68,7 +71,7 @@ function Test-NonEmptyString {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [string]) -or [string]::IsNullOrWhiteSpace($Value)) {
-        throw "$Context $PropertyName must be a non-empty text value."
+        throw "ERROR: $Context $PropertyName must be a non-empty text value."
     }
 }
 
@@ -80,7 +83,7 @@ function Test-IsList {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [System.Collections.IEnumerable]) -or ($Value -is [string])) {
-        throw "$Context $PropertyName must be provided as a list."
+        throw "ERROR: $Context $PropertyName must be provided as a list."
     }
 }
 
@@ -91,7 +94,7 @@ function Test-IsObject {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if ($Value -isnot [PSCustomObject] -and $Value -isnot [hashtable]) {
-        throw "$Context must be an object."
+        throw "ERROR: $Context must be an object."
     }
 }
 
@@ -138,7 +141,7 @@ function Expand-EnvTokens {
         $variableName = $match.Groups[1].Value
         $variableValue = [Environment]::GetEnvironmentVariable($variableName)
         if ($null -eq $variableValue) {
-            throw "Unknown environment variable: $variableName."
+            throw "ERROR: Unknown environment variable: $variableName."
         }
         $variableValue
     })
@@ -163,7 +166,7 @@ function Resolve-StorePath {
     $combinedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ProgramBasePath, $normalizedRelative))
 
     if (-not $combinedPath.StartsWith($ProgramBasePath, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Store path escapes the program's store folder: $RelativePath."
+        throw "ERROR: Store path escapes the program's store folder: $RelativePath."
     }
 
     $combinedPath
@@ -176,7 +179,7 @@ function Test-IsElevated {
         $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
         $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     } catch {
-        throw "Failed to determine elevation state."
+        throw "ERROR: Failed to determine elevation state."
     }
 }
 
@@ -208,7 +211,7 @@ function Clear-ReadOnly {
             [System.IO.File]::SetAttributes($FilePath, $attributes -bxor [System.IO.FileAttributes]::ReadOnly)
         }
     } catch {
-        throw "Failed to clear read-only attribute."
+        throw "ERROR: Failed to clear read-only attribute."
     }
 }
 
@@ -414,22 +417,28 @@ function Write-OperationResult {
     switch ($Result.Status) {
         $StatusCodes.Succeeded {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
-                Write-Host ('Succeeded {0} -> {1}.' -f $Result.Store, $Result.Live)
+                Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+                Write-Host ('{0} -> {1}.' -f $Result.Store, $Result.Live)
             } else {
-                Write-Host ('Succeeded {0}.' -f $Result.File)
+                Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+                Write-Host ('{0}.' -f $Result.File)
             }
         }
         $StatusCodes.Skipped {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
+                Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
                 Write-Host ('Skipped {0}.' -f $Result.Live)
             } else {
+                Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
                 Write-Host ('Skipped {0}.' -f $Result.File)
             }
         }
         $StatusCodes.Missing {
             if (Test-HasProperty -Object $Result -PropertyName 'Store') {
+                Write-Host "ERROR: " -ForegroundColor Red -NoNewline
                 Write-Host ('Missing {0}.' -f $Result.Store)
             } else {
+                Write-Host "ERROR: " -ForegroundColor Red -NoNewline
                 Write-Host ('Missing {0}.' -f $Result.File)
             }
         }
@@ -443,10 +452,12 @@ function Write-OperationResult {
             } else {
                 '<unknown>'
             }
+            Write-Host "ERROR: " -ForegroundColor Red -NoNewline
             Write-Host ('Failed {0}: {1}.' -f $displayPath, $Result.Message)
         }
         $StatusCodes.Imported {
-            Write-Host ('Imported {0}.' -f $Result.File)
+            Write-Host "IMPORTED: " -ForegroundColor Cyan -NoNewline
+            Write-Host ('{0}.' -f $Result.File)
         }
     }
 }
@@ -592,7 +603,8 @@ function Show-ManualItems {
     }
 
     foreach ($manualItem in $programDefinition.manual) {
-        Write-Host ('- {0}' -f $manualItem)
+        Write-Host "MANUAL: " -ForegroundColor Magenta -NoNewline
+        Write-Host $manualItem
     }
 }
 
@@ -611,7 +623,8 @@ function Invoke-ProgramRestore {
         Imported  = 0
     }
 
-    Write-Host ("`n{0}" -f $ProgramContext.Name)
+    Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
+    Write-Host ("Processing {0}." -f $ProgramContext.Name)
 
     Process-FileMapping -ProgramContext $ProgramContext -Counters $programCounters
     Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $programCounters
@@ -635,12 +648,12 @@ $ConfigText = Get-Content -LiteralPath $MapPath -Raw -Encoding UTF8
 try {
     $Config = $ConfigText | ConvertFrom-Json -ErrorAction Stop
 } catch {
-    throw "Map configuration could not be parsed."
+    throw "ERROR: Map configuration could not be parsed."
 }
 
 # Validate programs list exists.
 if (-not (Test-HasProperty -Object $Config -PropertyName 'programs')) {
-    throw "Map configuration is missing a list of program entries."
+    throw "ERROR: Map configuration is missing a list of program entries."
 }
 Test-IsList -Value $Config.programs -PropertyName 'programs' -Context 'Map configuration'
 
@@ -674,7 +687,7 @@ foreach ($programDef in $ProgramDefinitions) {
         param($registryFile)
         Test-NonEmptyString -Value $registryFile -PropertyName 'registry file' -Context 'Registry file list'
         if (-not ($registryFile.ToString().ToLowerInvariant().EndsWith('.reg'))) {
-            throw "Registry file entry must end with .reg."
+            throw "ERROR: Registry file entry must end with .reg."
         }
     }
 }
@@ -706,11 +719,16 @@ foreach ($programContext in $ProgramContexts) {
 }
 
 # Print overall results.
-Write-Host ("`nSucceeded={0}." -f $OverallCounters.Succeeded)
-Write-Host ("Skipped={0}."   -f $OverallCounters.Skipped)
-Write-Host ("Missing={0}."   -f $OverallCounters.Missing)
-Write-Host ("Failed={0}."    -f $OverallCounters.Failed)
-Write-Host ("Imported={0}."  -f $OverallCounters.Imported)
+Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
+Write-Host ("Succeeded={0}." -f $OverallCounters.Succeeded)
+Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+Write-Host ("Skipped={0}." -f $OverallCounters.Skipped)
+Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+Write-Host ("Missing={0}." -f $OverallCounters.Missing)
+Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+Write-Host ("Failed={0}." -f $OverallCounters.Failed)
+Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+Write-Host ("Imported={0}." -f $OverallCounters.Imported)
 
 # Exit with appropriate status.
 exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))

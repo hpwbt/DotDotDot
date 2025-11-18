@@ -15,13 +15,13 @@ rem Display banner.
 
 rem Verify scripts exist.
 if not exist "%SCRIPTS_DIR_PATH%\env.ps1" (
-    powershell -NoProfile -Command "Write-Host 'Error: env.ps1 not found.' -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'env.ps1 not found.'"
     pause
     exit /b 1
 )
 
 if not exist "%SCRIPTS_DIR_PATH%\apply.ps1" (
-    powershell -NoProfile -Command "Write-Host 'Error: apply.ps1 not found.' -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'apply.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -31,9 +31,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\env.ps1'; & '%SCRIPTS_DIR_PATH%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 
 if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host \"`nOne or more steps failed.\" -ForegroundColor Red"
+    powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"One or more steps failed.\""
 ) else (
-    powershell -NoProfile -Command "Write-Host \"`nAll steps succeeded.\" -ForegroundColor Green"
+    powershell -NoProfile -Command "Write-Host \"`nSUCCESS: \" -ForegroundColor Green -NoNewline; Write-Host \"All steps succeeded.\""
 )
 
 pause

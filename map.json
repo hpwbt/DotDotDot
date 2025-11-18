@@ -12,10 +12,6 @@
         { "live": "$env:APPDATA/foobar2000/config.sqlite", "store": "config.sqlite" },
         { "live": "$env:APPDATA/foobar2000/metadb.sqlite", "store": "metadb.sqlite" },
         { "live": "$env:APPDATA/foobar2000/theme.fth", "store": "theme.fth" }
-      ],
-      "directories": [
-        { "live": "$env:APPDATA/foobar2000/library-v2.0", "store": "library-v2.0" },
-        { "live": "$env:APPDATA/foobar2000/playlists-v2.0", "store": "playlists-v2.0" }
       ]
     },
     {
