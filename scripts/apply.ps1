@@ -10,10 +10,11 @@ $StatusCodes = @{
     Imported  = 'imported'
 }
 
-# Resolve repository paths.
+# Resolve paths from script location.
 $ScriptDirPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $DotfilesRootPath = Split-Path $ScriptDirPath -Parent
-$MapPath = Join-Path $DotfilesRootPath "map.json"
+$StoreRootPath = Join-Path $DotfilesRootPath 'store'
+$MapPath = Join-Path $DotfilesRootPath 'map.json'
 
 # Verify we're running from inside %USERPROFILE%\Dotfiles.
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
@@ -462,7 +463,7 @@ function Update-Counters {
         $StatusCodes.Skipped   { $Counters.Skipped++ }
         $StatusCodes.Missing   { $Counters.Missing++ }
         $StatusCodes.Failed    { $Counters.Failed++ }
-        $StatusCodes.Imported  { $Counters.Succeeded++ }
+        $StatusCodes.Imported  { $Counters.Imported++ }
         default                { $Counters.Failed++ }
     }
 }
@@ -607,6 +608,7 @@ function Invoke-ProgramRestore {
         Skipped   = 0
         Missing   = 0
         Failed    = 0
+        Imported  = 0
     }
 
     Write-Host ("`n{0}" -f $ProgramContext.Name)
@@ -625,6 +627,7 @@ $OverallCounters = @{
     Skipped   = 0
     Missing   = 0
     Failed    = 0
+    Imported  = 0
 }
 
 # Read and parse the map configuration.
@@ -634,12 +637,6 @@ try {
 } catch {
     throw "Map configuration could not be parsed."
 }
-
-# Validate store root.
-if (-not (Test-HasProperty -Object $Config -PropertyName 'storeRoot')) {
-    throw "Map configuration lacks a defined store root."
-}
-Test-NonEmptyString -Value $Config.storeRoot -PropertyName 'storeRoot' -Context 'Map configuration'
 
 # Validate programs list exists.
 if (-not (Test-HasProperty -Object $Config -PropertyName 'programs')) {
@@ -682,9 +679,6 @@ foreach ($programDef in $ProgramDefinitions) {
     }
 }
 
-# Expand and normalize the store root.
-$StoreRootPath = Normalize-Path (Expand-EnvTokens -Text ([string]$Config.storeRoot))
-
 # Prepare program contexts with computed base paths.
 $ProgramContexts = foreach ($programDef in $ProgramDefinitions) {
     $programSubdirName = $programDef.name -replace '/', '\'
@@ -708,6 +702,7 @@ foreach ($programContext in $ProgramContexts) {
     $OverallCounters.Skipped   += $programCounters.Skipped
     $OverallCounters.Missing   += $programCounters.Missing
     $OverallCounters.Failed    += $programCounters.Failed
+    $OverallCounters.Imported  += $programCounters.Imported
 }
 
 # Print overall results.
@@ -715,6 +710,7 @@ Write-Host ("`nSucceeded={0}." -f $OverallCounters.Succeeded)
 Write-Host ("Skipped={0}."   -f $OverallCounters.Skipped)
 Write-Host ("Missing={0}."   -f $OverallCounters.Missing)
 Write-Host ("Failed={0}."    -f $OverallCounters.Failed)
+Write-Host ("Imported={0}."  -f $OverallCounters.Imported)
 
 # Exit with appropriate status.
 exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))
