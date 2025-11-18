@@ -23,8 +23,8 @@ if not exist "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1" (
     exit /b 1
 )
 
-if not exist "%SCRIPTS_DIR_PATH%\SetUpEnvironment.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetUpEnvironment.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\SetUpEnvironmentalVariables.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetUpEnvironmentalVariables.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -42,8 +42,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute SetUpEnvironment script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\SetUpEnvironment.ps1"
+rem Execute SetUpEnvironmentalVariables script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\SetUpEnvironmentalVariables.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
