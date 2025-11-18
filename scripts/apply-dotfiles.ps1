@@ -443,36 +443,40 @@ function Write-OperationResult {
         $StatusCodes.Succeeded {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
                 Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-                Write-Host ('{0} -> {1}.' -f $Result.Store, $Result.Live)
+                Write-Host ('{0} -> {1}' -f $Result.Store, $Result.Live)
             } else {
                 Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-                Write-Host ('{0}.' -f $Result.File)
+                Write-Host ('{0}' -f $Result.File)
             }
         }
         $StatusCodes.Skipped {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
                 Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+                Write-Host ('Skipped {0}' -f $Result.Live)
                 if ($Result.Message) {
-                    Write-Host ('Skipped {0}. {1}' -f $Result.Live, $Result.Message)
-                } else {
-                    Write-Host ('Skipped {0}.' -f $Result.Live)
+                    Write-Host ('         {0}' -f $Result.Message)
                 }
             } else {
                 Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+                Write-Host ('Skipped {0}' -f $Result.File)
                 if ($Result.Message) {
-                    Write-Host ('Skipped {0}. {1}' -f $Result.File, $Result.Message)
-                } else {
-                    Write-Host ('Skipped {0}.' -f $Result.File)
+                    Write-Host ('         {0}' -f $Result.Message)
                 }
             }
         }
         $StatusCodes.Missing {
             if (Test-HasProperty -Object $Result -PropertyName 'Store') {
                 Write-Host "ERROR: " -ForegroundColor Red -NoNewline
-                Write-Host ('Missing {0}.' -f $Result.Store)
+                Write-Host ('Missing {0}' -f $Result.Store)
+                if ($Result.Message) {
+                    Write-Host ('       {0}' -f $Result.Message)
+                }
             } else {
                 Write-Host "ERROR: " -ForegroundColor Red -NoNewline
-                Write-Host ('Missing {0}.' -f $Result.File)
+                Write-Host ('Missing {0}' -f $Result.File)
+                if ($Result.Message) {
+                    Write-Host ('       {0}' -f $Result.Message)
+                }
             }
         }
         $StatusCodes.Failed {
@@ -486,11 +490,14 @@ function Write-OperationResult {
                 '<unknown>'
             }
             Write-Host "ERROR: " -ForegroundColor Red -NoNewline
-            Write-Host ('Failed {0}: {1}.' -f $displayPath, $Result.Message)
+            Write-Host ('Failed {0}' -f $displayPath)
+            if ($Result.Message) {
+                Write-Host ('       {0}' -f $Result.Message)
+            }
         }
         $StatusCodes.Imported {
             Write-Host "IMPORTED: " -ForegroundColor Cyan -NoNewline
-            Write-Host ('{0}.' -f $Result.File)
+            Write-Host ('{0}' -f $Result.File)
         }
     }
 }
