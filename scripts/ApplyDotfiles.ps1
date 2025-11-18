@@ -760,7 +760,7 @@ foreach ($programContext in $ProgramContexts) {
 
 # Print overall results.
 Write-Host "`nSUMMARY: " -ForegroundColor DarkCyan -NoNewline
-Write-Host ("Succeeded {0}, Skipped {1}, Missing {2}, Failed {3}, Imported {4}." -f $OverallCounters.Succeeded, $OverallCounters.Skipped, $OverallCounters.Missing, $OverallCounters.Failed, $OverallCounters.Imported)
+Write-Host ("{0} Succeeded, {1} Skipped, {2} Missing, {3} Failed, {4} Imported" -f $OverallCounters.Succeeded, $OverallCounters.Skipped, $OverallCounters.Missing, $OverallCounters.Failed, $OverallCounters.Imported)
 
 # Exit with appropriate status.
 exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))
