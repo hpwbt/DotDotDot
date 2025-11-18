@@ -52,7 +52,7 @@ if (Test-Path -LiteralPath $ProfilesRootPath) {
         Write-Host ("Path: {0}." -f $env:LIBREPROFILE)
     } elseif ($ProfileMatches.Count -gt 1) {
         Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Multiple default-default LibreWolf profiles found."
+        Write-Host "Skipped setting LIBREPROFILE. Multiple default-default LibreWolf profiles found."
     }
 }
 
