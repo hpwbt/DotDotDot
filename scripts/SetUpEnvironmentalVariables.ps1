@@ -5,51 +5,55 @@ $ErrorActionPreference = 'Stop'
 try {
     $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
-    $isElevated = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    $IsElevated = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 } catch {
-    $isElevated = $false
+    $IsElevated = $false
 }
 
-# Set NODE_REPL_HISTORY at system level if elevated.
-if ($isElevated) {
+# Define permanent environmental variables.
+$PermanentVariables = @(
+    @{ Name = 'NODE_REPL_HISTORY'; Value = ' '; Scope = 'Machine' },
+    @{ Name = 'PYTHON_HISTORY'; Value = ' '; Scope = 'Machine' }
+)
+
+# Set permanent environmental variables.
+foreach ($var in $PermanentVariables) {
+    $requiresElevation = $var.Scope -eq 'Machine'
+
+    if ($requiresElevation -and -not $IsElevated) {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host ("Skipped {0}. Requires elevation." -f $var.Name)
+        continue
+    }
+
     try {
-        [Environment]::SetEnvironmentVariable('NODE_REPL_HISTORY', ' ', 'Machine')
+        [Environment]::SetEnvironmentVariable($var.Name, $var.Value, $var.Scope)
         Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host "NODE_REPL_HISTORY set."
+        Write-Host ("{0} set." -f $var.Name)
         Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-        Write-Host "Value: `" `" (single space)."
+        Write-Host ("Value: `"{0}`"." -f $var.Value)
     } catch {
         Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to set NODE_REPL_HISTORY."
+        Write-Host ("Failed to set {0}." -f $var.Name)
     }
-} else {
-    Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
-    Write-Host "Skipped NODE_REPL_HISTORY. Requires elevation."
 }
 
 # Set LIBREPROFILE for current session.
-$profilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
+$ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
 
-if (-not (Test-Path -LiteralPath $profilesRootPath)) {
-    exit 0
+if (Test-Path -LiteralPath $ProfilesRootPath) {
+    $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
+
+    if ($ProfileMatches.Count -eq 1) {
+        $env:LIBREPROFILE = $ProfileMatches[0].FullName
+        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "LIBREPROFILE set for current session."
+        Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+        Write-Host ("Path: {0}." -f $env:LIBREPROFILE)
+    } elseif ($ProfileMatches.Count -gt 1) {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Multiple default-default LibreWolf profiles found."
+    }
 }
-
-$profileMatches = @(Get-ChildItem -Path $profilesRootPath -Directory -Filter '*.default-default')
-
-if ($profileMatches.Count -eq 0) {
-    exit 0
-}
-
-if ($profileMatches.Count -gt 1) {
-    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host "Multiple default-default LibreWolf profiles found."
-    exit 1
-}
-
-$env:LIBREPROFILE = $profileMatches[0].FullName
-Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
-Write-Host "LIBREPROFILE set for current session."
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Path: {0}." -f $env:LIBREPROFILE)
 
 exit 0
