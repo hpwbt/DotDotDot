@@ -497,7 +497,7 @@ function Write-OperationResult {
             Write-Host ('Failed {0}: {1}' -f $displayPath, $Result.Message)
         }
         $StatusCodes.Imported {
-            Write-Host "IMPORTED: " -ForegroundColor Cyan -NoNewline
+            Write-Host "IMPORTED: " -ForegroundColor Green -NoNewline
             Write-Host ('{0}.' -f $Result.File)
         }
     }
