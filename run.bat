@@ -17,6 +17,12 @@ rem Set execution policy to Bypass for CurrentUser.
 powershell -NoProfile -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force" >nul 2>&1
 
 rem Verify scripts exist.
+if not exist "%SCRIPTS_DIR_PATH%\check-activation.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'check-activation.ps1 not found.'"
+    pause
+    exit /b 1
+)
+
 if not exist "%SCRIPTS_DIR_PATH%\set-environment.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'set-environment.ps1 not found.'"
     pause
@@ -31,7 +37,7 @@ if not exist "%SCRIPTS_DIR_PATH%\apply.ps1" (
 
 rem Execute PowerShell scripts with proper error handling.
 powershell -NoProfile -Command ^
-    "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\set-environment.ps1'; & '%SCRIPTS_DIR_PATH%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
+    "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\check-activation.ps1'; & '%SCRIPTS_DIR_PATH%\set-environment.ps1'; & '%SCRIPTS_DIR_PATH%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"One or more steps failed.\""
