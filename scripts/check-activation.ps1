@@ -34,7 +34,7 @@ try {
 }
 
 # Confirm success.
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
 Write-Host ("Edition: {0}." -f $OSInfo.Caption)
-Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
 Write-Host "System verification passed."

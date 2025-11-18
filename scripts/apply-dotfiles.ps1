@@ -761,15 +761,15 @@ foreach ($programContext in $ProgramContexts) {
 
 # Print overall results.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Succeeded - {0}." -f $OverallCounters.Succeeded)
+Write-Host ("Succeeded {0}." -f $OverallCounters.Succeeded)
 Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Skipped - {0}." -f $OverallCounters.Skipped)
+Write-Host ("Skipped {0}." -f $OverallCounters.Skipped)
 Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Missing - {0}." -f $OverallCounters.Missing)
+Write-Host ("Missing {0}." -f $OverallCounters.Missing)
 Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Failed - {0}." -f $OverallCounters.Failed)
+Write-Host ("Failed {0}." -f $OverallCounters.Failed)
 Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Imported - {0}." -f $OverallCounters.Imported)
+Write-Host ("Imported {0}." -f $OverallCounters.Imported)
 
 # Exit with appropriate status.
 exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))
