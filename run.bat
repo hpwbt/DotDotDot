@@ -29,15 +29,15 @@ if not exist "%SCRIPTS_DIR_PATH%\set-environment.ps1" (
     exit /b 1
 )
 
-if not exist "%SCRIPTS_DIR_PATH%\apply.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'apply.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'apply-dotfiles.ps1 not found.'"
     pause
     exit /b 1
 )
 
 rem Execute PowerShell scripts with proper error handling.
 powershell -NoProfile -Command ^
-    "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\check-activation.ps1'; & '%SCRIPTS_DIR_PATH%\set-environment.ps1'; & '%SCRIPTS_DIR_PATH%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
+    "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\check-activation.ps1'; & '%SCRIPTS_DIR_PATH%\set-environment.ps1'; & '%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"One or more steps failed.\""
