@@ -173,7 +173,7 @@ function Resolve-StorePath {
     $combinedPath
 }
 
-# Detect whether the process has administrative rights.
+# Detect whether the process is elevated.
 function Test-IsElevated {
     try {
         $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()

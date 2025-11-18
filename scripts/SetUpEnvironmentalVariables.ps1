@@ -1,31 +1,55 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Locate LibreWolf profiles directory.
-$ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
+# Check elevation state.
+try {
+    $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+    $isElevated = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+} catch {
+    $isElevated = $false
+}
 
-if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
+# Set NODE_REPL_HISTORY at system level if elevated.
+if ($isElevated) {
+    try {
+        [Environment]::SetEnvironmentVariable('NODE_REPL_HISTORY', ' ', 'Machine')
+        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "NODE_REPL_HISTORY set."
+        Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
+        Write-Host "Value: `" `" (single space)."
+    } catch {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Failed to set NODE_REPL_HISTORY."
+    }
+} else {
+    Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "Skipped NODE_REPL_HISTORY. Requires elevation."
+}
+
+# Set LIBREPROFILE for current session.
+$profilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
+
+if (-not (Test-Path -LiteralPath $profilesRootPath)) {
     exit 0
 }
 
-# Find exactly one *.default-default profile.
-$ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
+$profileMatches = @(Get-ChildItem -Path $profilesRootPath -Directory -Filter '*.default-default')
 
-if ($ProfileMatches.Count -eq 0) {
+if ($profileMatches.Count -eq 0) {
     exit 0
 }
 
-if ($ProfileMatches.Count -gt 1) {
+if ($profileMatches.Count -gt 1) {
     Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host "Multiple default-default profiles found."
+    Write-Host "Multiple default-default LibreWolf profiles found."
     exit 1
 }
 
-# Set LIBREPROFILE environment variable.
-$env:LIBREPROFILE = $ProfileMatches[0].FullName
-
-# Confirm success.
+$env:LIBREPROFILE = $profileMatches[0].FullName
 Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
-Write-Host "Environment variable successfully set."
+Write-Host "LIBREPROFILE set for current session."
 Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("LIBREPROFILE = `"{0}`"." -f $env:LIBREPROFILE)
+Write-Host ("Path: {0}." -f $env:LIBREPROFILE)
+
+exit 0
