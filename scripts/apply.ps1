@@ -25,7 +25,7 @@ if ($DotfilesRootPath -ne $ExpectedDirPath) {
     exit 1
 }
 
-# Require presence of the configuration file.
+# Verify the configuration file exists.
 if (-not (Test-Path -LiteralPath $MapPath)) {
     throw "Map configuration file not found at: $MapPath."
 }
