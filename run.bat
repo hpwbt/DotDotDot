@@ -17,40 +17,40 @@ rem Display banner.
 <nul set /p ="|___/ \___/ \__|\/|_|\/\____/ " & echo.
 
 rem Verify scripts exist.
-if not exist "%SCRIPTS_DIR_PATH%\check-activation.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'check-activation.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'VerifySystemActivation.ps1 not found.'"
     pause
     exit /b 1
 )
 
-if not exist "%SCRIPTS_DIR_PATH%\set-environment.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'set-environment.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\SetUpEnvironment.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetUpEnvironment.ps1 not found.'"
     pause
     exit /b 1
 )
 
-if not exist "%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'apply-dotfiles.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyDotfiles.ps1 not found.'"
     pause
     exit /b 1
 )
 
-rem Execute check-activation script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\check-activation.ps1"
+rem Execute VerifySystemActivation script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
 )
 
-rem Execute set-environment script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\set-environment.ps1"
+rem Execute SetUpEnvironment script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\SetUpEnvironment.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
 )
 
-rem Execute apply-dotfiles script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1"
+rem Execute ApplyDotfiles script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
