@@ -38,7 +38,6 @@ if not exist "%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1" (
 rem Execute check-activation script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\check-activation.ps1"
 if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"Activation check failed.\""
     pause
     exit /b 1
 )
@@ -46,7 +45,6 @@ if errorlevel 1 (
 rem Execute set-environment script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\set-environment.ps1"
 if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"Environment setup failed.\""
     pause
     exit /b 1
 )
@@ -54,12 +52,11 @@ if errorlevel 1 (
 rem Execute apply-dotfiles script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\apply-dotfiles.ps1"
 if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host \"`nERROR: \" -ForegroundColor Red -NoNewline; Write-Host \"Dotfiles application failed.\""
     pause
     exit /b 1
 )
 
-rem Success message.
+rem Display success message.
 powershell -NoProfile -Command "Write-Host \"`nSUCCESS: \" -ForegroundColor Green -NoNewline; Write-Host \"All steps succeeded.\""
 
 pause
