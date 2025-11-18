@@ -759,7 +759,7 @@ foreach ($programContext in $ProgramContexts) {
 }
 
 # Print overall results.
-Write-Host "`nSUMMARY: " -ForegroundColor Orange -NoNewline
+Write-Host "`nSUMMARY: " -ForegroundColor DarkCyan -NoNewline
 Write-Host ("Succeeded {0}, Skipped {1}, Missing {2}, Failed {3}, Imported {4}." -f $OverallCounters.Succeeded, $OverallCounters.Skipped, $OverallCounters.Missing, $OverallCounters.Failed, $OverallCounters.Imported)
 
 # Exit with appropriate status.

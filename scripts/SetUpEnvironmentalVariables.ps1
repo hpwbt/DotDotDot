@@ -22,7 +22,7 @@ foreach ($var in $PermanentVariables) {
 
     if ($requiresElevation -and -not $IsElevated) {
         Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host ("Skipped {0}. Requires elevation." -f $var.Name)
+        Write-Host ("Skipped setting {0}. Requires elevation." -f $var.Name)
         continue
     }
 
