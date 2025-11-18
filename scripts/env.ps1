@@ -1,4 +1,4 @@
-Set-StrictMode -Version 2.0
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # Locate LibreWolf profiles directory.
