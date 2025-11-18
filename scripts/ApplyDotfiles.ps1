@@ -643,10 +643,9 @@ function Show-ManualItems {
         return
     }
 
-    foreach ($manualItem in $programDefinition.manual) {
-        Write-Host "MANUAL APPLY NEEDED FOR: " -ForegroundColor Magenta -NoNewline
-        Write-Host $manualItem
-    }
+    $manualList = $programDefinition.manual -join ', '
+    Write-Host "MANUAL: " -ForegroundColor Magenta -NoNewline
+    Write-Host $manualList
 }
 
 # Restore a single program's configuration.
@@ -760,16 +759,8 @@ foreach ($programContext in $ProgramContexts) {
 }
 
 # Print overall results.
-Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Succeeded {0}." -f $OverallCounters.Succeeded)
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Skipped {0}." -f $OverallCounters.Skipped)
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Missing {0}." -f $OverallCounters.Missing)
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Failed {0}." -f $OverallCounters.Failed)
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host ("Imported {0}." -f $OverallCounters.Imported)
+Write-Host "`nSUMMARY: " -ForegroundColor Blue -NoNewline
+Write-Host ("Succeeded {0}, Skipped {1}, Missing {2}, Failed {3}, Imported {4}." -f $OverallCounters.Succeeded, $OverallCounters.Skipped, $OverallCounters.Missing, $OverallCounters.Failed, $OverallCounters.Imported)
 
 # Exit with appropriate status.
 exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))
