@@ -13,6 +13,9 @@ rem Display banner.
 <nul set /p ="| |/ / (_) | |_ / , . \.___/ /" & echo.
 <nul set /p ="|___/ \___/ \__|\/|_|\/\____/ " & echo.
 
+rem Set execution policy to Bypass for CurrentUser.
+powershell -NoProfile -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force" >nul 2>&1
+
 rem Verify scripts exist.
 if not exist "%SCRIPTS_DIR_PATH%\env.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'env.ps1 not found.'"
@@ -27,7 +30,7 @@ if not exist "%SCRIPTS_DIR_PATH%\apply.ps1" (
 )
 
 rem Execute PowerShell scripts with proper error handling.
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+powershell -NoProfile -Command ^
     "$ErrorActionPreference='Stop'; try { & '%SCRIPTS_DIR_PATH%\env.ps1'; & '%SCRIPTS_DIR_PATH%\apply.ps1' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 
 if errorlevel 1 (
