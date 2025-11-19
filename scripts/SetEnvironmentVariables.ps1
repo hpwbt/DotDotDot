@@ -14,13 +14,13 @@ try {
     $IsElevated = $false
 }
 
-# Define permanent environmental variables.
+# Define permanent environment variables.
 $PermanentVariables = @(
     @{ Name = 'NODE_REPL_HISTORY'; Value = ' '; Scope = 'Machine' },
     @{ Name = 'PYTHON_HISTORY'; Value = ' '; Scope = 'Machine' }
 )
 
-# Set permanent environmental variables.
+# Set permanent environment variables.
 foreach ($var in $PermanentVariables) {
     $requiresElevation = $var.Scope -eq 'Machine'
 
