@@ -93,7 +93,6 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
                 New-Item -Path $regPath -Force | Out-Null
             }
             Set-ItemProperty -Path $regPath -Name PortraitAssetPath -Value $destFile
-            Set-ItemProperty -Path $regPath -Name LandscapeAssetPath -Value $destFile
 
             Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
             Write-Host "Lock screen set."
