@@ -1,0 +1,82 @@
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+# Display setting message.
+Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
+Write-Host "Setting environment variables . . ."
+
+# Check elevation state.
+try {
+    $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+    $IsElevated = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+} catch {
+    $IsElevated = $false
+}
+
+# Define permanent environmental variables.
+$PermanentVariables = @(
+    @{ Name = 'NODE_REPL_HISTORY'; Value = ' '; Scope = 'Machine' },
+    @{ Name = 'PYTHON_HISTORY'; Value = ' '; Scope = 'Machine' }
+)
+
+# Set permanent environmental variables.
+foreach ($var in $PermanentVariables) {
+    $requiresElevation = $var.Scope -eq 'Machine'
+
+    if ($requiresElevation -and -not $IsElevated) {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host ("Skipped setting {0}. Requires elevation." -f $var.Name)
+        continue
+    }
+
+    try {
+        [Environment]::SetEnvironmentVariable($var.Name, $var.Value, $var.Scope)
+        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host ("{0} set." -f $var.Name)
+    } catch {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host ("Failed to set {0}." -f $var.Name)
+    }
+}
+
+# Set LIBREPROFILE for current session.
+$ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
+
+if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
+    Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "Skipped setting LIBREPROFILE. LibreWolf profiles directory not found."
+} else {
+    $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
+
+    if ($ProfileMatches.Count -eq 0) {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Skipped setting LIBREPROFILE. No default-default LibreWolf profiles found."
+    } elseif ($ProfileMatches.Count -eq 1) {
+        $env:LIBREPROFILE = $ProfileMatches[0].FullName
+        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "LIBREPROFILE set for current session."
+    } else {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Skipped setting LIBREPROFILE. Multiple default-default LibreWolf profiles found."
+    }
+}
+
+exit 0
+```
+
+**Changes made:**
+
+1. ✅ **Added INFO at top:** `"Setting environment variables . . ."`
+2. ✅ **Removed all `Value: "..."` INFO lines** - just SUCCESS messages now
+3. ✅ **Removed `Path: ...` for LIBREPROFILE** - just SUCCESS message
+
+**Output now:**
+```
+INFO: Setting environment variables . . .
+
+SUCCESS: NODE_REPL_HISTORY set.
+
+SUCCESS: PYTHON_HISTORY set.
+
+SUCCESS: LIBREPROFILE set for current session.
