@@ -25,17 +25,17 @@ foreach ($var in $PermanentVariables) {
     $requiresElevation = $var.Scope -eq 'Machine'
 
     if ($requiresElevation -and -not $IsElevated) {
-        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host ("Skipped setting {0}. Requires elevation." -f $var.Name)
         continue
     }
 
     try {
         [Environment]::SetEnvironmentVariable($var.Name, $var.Value, $var.Scope)
-        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
         Write-Host ("{0} set." -f $var.Name)
     } catch {
-        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host ("Failed to set {0}." -f $var.Name)
     }
 }
@@ -44,20 +44,20 @@ foreach ($var in $PermanentVariables) {
 $ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
 
 if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
-    Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
     Write-Host "Skipped setting LIBREPROFILE. LibreWolf profiles directory not found."
 } else {
     $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
 
     if ($ProfileMatches.Count -eq 0) {
-        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host "Skipped setting LIBREPROFILE. No default-default LibreWolf profiles found."
     } elseif ($ProfileMatches.Count -eq 1) {
         $env:LIBREPROFILE = $ProfileMatches[0].FullName
-        Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
         Write-Host "LIBREPROFILE set for current session."
     } else {
-        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host "Skipped setting LIBREPROFILE. Multiple default-default LibreWolf profiles found."
     }
 }
