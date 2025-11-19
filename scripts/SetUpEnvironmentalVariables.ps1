@@ -41,16 +41,22 @@ foreach ($var in $PermanentVariables) {
 # Set LIBREPROFILE for current session.
 $ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
 
-if (Test-Path -LiteralPath $ProfilesRootPath) {
+if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
+    Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "Skipped setting LIBREPROFILE. LibreWolf profiles directory not found."
+} else {
     $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
 
-    if ($ProfileMatches.Count -eq 1) {
+    if ($ProfileMatches.Count -eq 0) {
+        Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Skipped setting LIBREPROFILE. No default-default LibreWolf profiles found."
+    } elseif ($ProfileMatches.Count -eq 1) {
         $env:LIBREPROFILE = $ProfileMatches[0].FullName
         Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
         Write-Host "LIBREPROFILE set for current session."
         Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
         Write-Host ("Path: {0}." -f $env:LIBREPROFILE)
-    } elseif ($ProfileMatches.Count -gt 1) {
+    } else {
         Write-Host "`nWARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host "Skipped setting LIBREPROFILE. Multiple default-default LibreWolf profiles found."
     }
