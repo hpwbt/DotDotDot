@@ -84,7 +84,8 @@
         "Remove Thumbnail Overlays in Windows Explorer.reg",
         "Set the Full Right-Click Menu as the Default.reg",
         "Align the Taskbar to the Left and Hide the Search Box.reg",
-        "Hide the Task View Button in the Taskbar.reg"
+        "Hide the Task View Button in the Taskbar.reg",
+        "Hide Widgets in the Taskbar.reg"
       ]
     },
     {
