@@ -212,12 +212,11 @@ function Clear-ReadOnly {
     }
 }
 
-# Compare two files by size, modification time, and optionally by hash.
+# Compare two files by size and hash.
 function Compare-Files {
     param(
         [Parameter(Mandatory=$true)][string]$SourceFilePath,
-        [Parameter(Mandatory=$true)][string]$TargetFilePath,
-        [switch]$UseHash
+        [Parameter(Mandatory=$true)][string]$TargetFilePath
     )
 
     if (-not (Test-Path -LiteralPath $SourceFilePath) -or -not (Test-Path -LiteralPath $TargetFilePath)) {
@@ -227,22 +226,15 @@ function Compare-Files {
     $sourceFile = Get-Item -LiteralPath $SourceFilePath -Force
     $targetFile = Get-Item -LiteralPath $TargetFilePath -Force
 
+    # Quick size check before expensive hash comparison.
     if ($sourceFile.Length -ne $targetFile.Length) {
         return $false
     }
 
-    # Without hash comparison, different timestamps indicate different files.
-    if ($sourceFile.LastWriteTimeUtc -ne $targetFile.LastWriteTimeUtc -and -not $UseHash) {
-        return $false
-    }
-
-    if ($UseHash) {
-        $hashSource = Get-FileHash -LiteralPath $SourceFilePath -Algorithm SHA256
-        $hashTarget = Get-FileHash -LiteralPath $TargetFilePath -Algorithm SHA256
-        return $hashSource.Hash -eq $hashTarget.Hash
-    }
-
-    return $true
+    # Compare by SHA256 hash.
+    $hashSource = Get-FileHash -LiteralPath $SourceFilePath -Algorithm SHA256
+    $hashTarget = Get-FileHash -LiteralPath $TargetFilePath -Algorithm SHA256
+    return $hashSource.Hash -eq $hashTarget.Hash
 }
 
 # Copy a single file with skip and overwrite logic.
