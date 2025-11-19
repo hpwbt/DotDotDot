@@ -19,25 +19,21 @@ rem Display banner.
 rem Verify scripts exist.
 if not exist "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'VerifySystemActivation.ps1 not found.'"
-    powershell -NoProfile -Command "Write-Host"
     pause
     exit /b 1
 )
 if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetEnvironmentVariables.ps1 not found.'"
-    powershell -NoProfile -Command "Write-Host"
     pause
     exit /b 1
 )
 if not exist "%SCRIPTS_DIR_PATH%\ApplyBackgrounds.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyBackgrounds.ps1 not found.'"
-    powershell -NoProfile -Command "Write-Host"
     pause
     exit /b 1
 )
 if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyDotfiles.ps1 not found.'"
-    powershell -NoProfile -Command "Write-Host"
     pause
     exit /b 1
 )
