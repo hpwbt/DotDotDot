@@ -100,21 +100,14 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
                 $destFile = Join-Path $LockScreenDestDir $sourceFile.Name
                 Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
 
-                # Set lock screen via registry.
-                $regPath1 = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
-                $regPath2 = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP'
-
-                if (-not (Test-Path $regPath1)) {
-                    New-Item -Path $regPath1 -Force | Out-Null
-                }
-                if (-not (Test-Path $regPath2)) {
-                    New-Item -Path $regPath2 -Force | Out-Null
+                # Set lock screen via system-level registry.
+                $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP'
+                if (-not (Test-Path $regPath)) {
+                    New-Item -Path $regPath -Force | Out-Null
                 }
 
-                Set-ItemProperty -Path $regPath1 -Name LockScreenImage -Value $destFile -Type String
-                Set-ItemProperty -Path $regPath2 -Name LockScreenImageStatus -Value 1 -Type DWord
-                Set-ItemProperty -Path $regPath2 -Name LockScreenImagePath -Value $destFile -Type String
-                Set-ItemProperty -Path $regPath2 -Name LockScreenImageUrl -Value $destFile -Type String
+                Set-ItemProperty -Path $regPath -Name LockScreenImagePath -Value $destFile -Type String
+                Set-ItemProperty -Path $regPath -Name LockScreenImageStatus -Value 1 -Type DWord
 
                 Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
                 Write-Host "Lock screen set."
