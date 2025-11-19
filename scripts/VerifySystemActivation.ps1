@@ -12,13 +12,13 @@ try {
     $OSInfo = Get-CimInstance -ClassName Win32_OperatingSystem
 
     if (-not $LicenseInfo -or $LicenseInfo.LicenseStatus -ne 1) {
-        Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
+        Write-Host "ERROR: " -ForegroundColor Red -NoNewline
         Write-Host "Windows is not activated."
         exit 1
     }
 
     if ($OSInfo.Caption -notlike "*Windows 11 Pro*") {
-        Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
+        Write-Host "ERROR: " -ForegroundColor Red -NoNewline
         Write-Host "Windows is not activated."
         exit 1
     }
@@ -27,7 +27,7 @@ try {
     Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
     Write-Host "Windows is activated."
 } catch {
-    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
+    Write-Host "ERROR: " -ForegroundColor Red -NoNewline
     Write-Host "Windows is not activated."
     exit 1
 }
