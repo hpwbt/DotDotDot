@@ -27,13 +27,13 @@ if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1" (
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\ApplyPersonalizations.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyPersonalizations.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\ApplyBackgrounds.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyBackgrounds.ps1 not found.'"
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\ApplySettings.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplySettings.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyDotfiles.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -52,15 +52,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute ApplyPersonalizations script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyPersonalizations.ps1"
+rem Execute ApplyBackgrounds script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyBackgrounds.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
 )
 
-rem Execute ApplySettings script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplySettings.ps1"
+rem Execute ApplyDotfiles script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
