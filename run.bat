@@ -57,7 +57,7 @@ if errorlevel 1 (
 )
 
 rem Display success message.
-powershell -NoProfile -Command "Write-Host \"`nSUCCESS: \" -ForegroundColor Green -NoNewline; Write-Host \"All steps succeeded.\""
+powershell -NoProfile -Command "Write-Host \"SUMMARY: \" -ForegroundColor DarkCyan -NoNewline; Write-Host \"Tasks finished.\""
 
 pause
 endlocal

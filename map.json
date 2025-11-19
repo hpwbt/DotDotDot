@@ -82,7 +82,9 @@
         "Remove the Home Section in Settings.reg",
         "Remove the Recommended Section in the Start Menu.reg",
         "Remove Thumbnail Overlays in Windows Explorer.reg",
-        "Set the Full Right-Click Menu as the Default.reg"
+        "Set the Full Right-Click Menu as the Default.reg",
+        "Align the Taskbar to the Left and Hide the Search Box.reg",
+        "Hide the Task View Button in the Taskbar.reg"
       ]
     },
     {
