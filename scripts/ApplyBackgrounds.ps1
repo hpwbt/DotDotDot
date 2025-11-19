@@ -52,10 +52,6 @@ if (-not (Test-Path -LiteralPath $WallpaperSourceDir)) {
             # Set wallpaper via registry.
             Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name Wallpaper -Value $destFile
             Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
-            Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value '0'
-
-            # Refresh desktop to apply changes.
-            & RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
 
             Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
             Write-Host "Wallpaper set."
@@ -92,12 +88,12 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
             Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
 
             # Set lock screen via registry.
-            $regPath = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP'
+            $regPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lock Screen\Creative'
             if (-not (Test-Path $regPath)) {
                 New-Item -Path $regPath -Force | Out-Null
             }
-            Set-ItemProperty -Path $regPath -Name LockScreenImagePath -Value $destFile
-            Set-ItemProperty -Path $regPath -Name LockScreenImageStatus -Value 1
+            Set-ItemProperty -Path $regPath -Name PortraitAssetPath -Value $destFile
+            Set-ItemProperty -Path $regPath -Name LandscapeAssetPath -Value $destFile
 
             Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
             Write-Host "Lock screen set."
