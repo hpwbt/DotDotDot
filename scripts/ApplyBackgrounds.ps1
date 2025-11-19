@@ -100,7 +100,7 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
                 $destFile = Join-Path $LockScreenDestDir $sourceFile.Name
                 Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
 
-                # Set lock screen via system-level registry.
+                # Set lock screen via registry.
                 $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP'
                 if (-not (Test-Path $regPath)) {
                     New-Item -Path $regPath -Force | Out-Null
