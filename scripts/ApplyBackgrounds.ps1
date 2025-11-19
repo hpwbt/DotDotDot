@@ -87,12 +87,13 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
             $destFile = Join-Path $LockScreenDestDir $sourceFile.Name
             Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
 
-            # Set lock screen via registry.
-            $regPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lock Screen\Creative'
+            # Set lock screen via policy.
+            $regPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
             if (-not (Test-Path $regPath)) {
                 New-Item -Path $regPath -Force | Out-Null
             }
-            Set-ItemProperty -Path $regPath -Name PortraitAssetPath -Value $destFile
+            Set-ItemProperty -Path $regPath -Name LockScreenImage -Value $destFile
+
 
             Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
             Write-Host "Lock screen set."
