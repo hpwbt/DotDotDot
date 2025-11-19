@@ -58,7 +58,6 @@ if errorlevel 1 (
 
 rem Display success message.
 powershell -NoProfile -Command "Write-Host 'SUMMARY: ' -ForegroundColor DarkCyan -NoNewline; Write-Host 'Tasks finished.'"
-powershell -NoProfile -Command "Write-Host `n"
 
 pause
 endlocal
