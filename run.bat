@@ -70,5 +70,10 @@ rem Display success message.
 powershell -NoProfile -Command "Write-Host 'SUMMARY: ' -ForegroundColor DarkCyan -NoNewline; Write-Host 'Tasks finished.'"
 powershell -NoProfile -Command "Write-Host"
 
-pause
+<nul set /p ="Press any key to restart . . ."
+pause >nul
+
+rem Restart computer.
+shutdown /r /t 0
+
 endlocal
