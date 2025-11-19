@@ -137,7 +137,6 @@ function Expand-EnvTokens {
         $variableName = $match.Groups[1].Value
         $variableValue = [Environment]::GetEnvironmentVariable($variableName)
         if ($null -eq $variableValue) {
-            # Return a marker indicating undefined variable instead of throwing.
             return "__UNDEFINED_ENV_VAR__{0}__" -f $variableName
         }
         $variableValue
@@ -226,12 +225,10 @@ function Compare-Files {
     $sourceFile = Get-Item -LiteralPath $SourceFilePath -Force
     $targetFile = Get-Item -LiteralPath $TargetFilePath -Force
 
-    # Quick size check before expensive hash comparison.
     if ($sourceFile.Length -ne $targetFile.Length) {
         return $false
     }
 
-    # Compare by SHA256 hash.
     $hashSource = Get-FileHash -LiteralPath $SourceFilePath -Algorithm SHA256
     $hashTarget = Get-FileHash -LiteralPath $TargetFilePath -Algorithm SHA256
     return $hashSource.Hash -eq $hashTarget.Hash
@@ -244,7 +241,6 @@ function Copy-File {
         [Parameter(Mandatory=$true)][string]$LivePath
     )
 
-    # Check if live path contains undefined environment variable marker.
     if ($LivePath -like '*__UNDEFINED_ENV_VAR__*') {
         $undefinedVar = if ($LivePath -match '__UNDEFINED_ENV_VAR__([A-Za-z0-9_]+)__') { $matches[1] } else { 'unknown' }
         return [pscustomobject]@{
@@ -304,7 +300,6 @@ function Copy-Directory {
         [Parameter(Mandatory=$true)][string]$LivePath
     )
 
-    # Check if live path contains undefined environment variable marker.
     if ($LivePath -like '*__UNDEFINED_ENV_VAR__*') {
         $undefinedVar = if ($LivePath -match '__UNDEFINED_ENV_VAR__([A-Za-z0-9_]+)__') { $matches[1] } else { 'unknown' }
         return [pscustomobject]@{
@@ -376,7 +371,6 @@ function Import-RegFile {
     }
 
     try {
-        # Temporarily allow stderr output without throwing exceptions.
         $savedErrorAction = $ErrorActionPreference
         try {
             $ErrorActionPreference = 'Continue'
@@ -393,7 +387,6 @@ function Import-RegFile {
                 Message = $null
             }
         } else {
-            # Extract actual error message from output.
             $errorMessage = if ($output) {
                 ($output | Where-Object { $_ -match 'ERROR:' -or $_ -is [System.Management.Automation.ErrorRecord] } |
                  ForEach-Object { if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
@@ -423,9 +416,7 @@ function Import-RegFile {
 
 # Write operation result to console with appropriate formatting.
 function Write-OperationResult {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$Result
-    )
+    param([Parameter(Mandatory=$true)][psobject]$Result)
 
     switch ($Result.Status) {
         $StatusCodes.Succeeded {
@@ -491,39 +482,10 @@ function Write-OperationResult {
     }
 }
 
-# Update counter hashtable based on operation result.
-function Update-Counters {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$Result,
-        [Parameter(Mandatory=$true)][hashtable]$Counters
-    )
-
-    switch ($Result.Status) {
-        $StatusCodes.Succeeded { $Counters.Succeeded++ }
-        $StatusCodes.Skipped   { $Counters.Skipped++ }
-        $StatusCodes.Missing   { $Counters.Missing++ }
-        $StatusCodes.Failed    { $Counters.Failed++ }
-        $StatusCodes.Imported  { $Counters.Imported++ }
-        default                { $Counters.Failed++ }
-    }
-}
-
-# Handle an operation result by writing output and updating counters.
-function Handle-OperationResult {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$Result,
-        [Parameter(Mandatory=$true)][hashtable]$Counters
-    )
-
-    Write-OperationResult -Result $Result
-    Update-Counters -Result $Result -Counters $Counters
-}
-
 # Process items from a property with error handling per item.
 function Invoke-ItemProcessor {
     param(
         [Parameter(Mandatory=$true)][psobject]$ProgramContext,
-        [Parameter(Mandatory=$true)][hashtable]$Counters,
         [Parameter(Mandatory=$true)][string]$PropertyName,
         [Parameter(Mandatory=$true)][scriptblock]$ItemProcessor
     )
@@ -538,7 +500,7 @@ function Invoke-ItemProcessor {
         try {
             $results = @(& $ItemProcessor $item $ProgramContext)
             foreach ($result in $results) {
-                Handle-OperationResult -Result $result -Counters $Counters
+                Write-OperationResult -Result $result
             }
         } catch {
             $errorResult = [pscustomobject]@{
@@ -546,7 +508,6 @@ function Invoke-ItemProcessor {
                 Message = $_.Exception.Message
             }
 
-            # Add contextual properties based on item type.
             if ($item -is [PSCustomObject] -or $item -is [hashtable]) {
                 if (Test-HasProperty -Object $item -PropertyName 'store') {
                     $errorResult | Add-Member -NotePropertyName 'Store' -NotePropertyValue $item.store
@@ -555,23 +516,19 @@ function Invoke-ItemProcessor {
                     $errorResult | Add-Member -NotePropertyName 'Live' -NotePropertyValue $item.live
                 }
             } else {
-                # Assume it's a file path string.
                 $errorResult | Add-Member -NotePropertyName 'File' -NotePropertyValue $item
             }
 
-            Handle-OperationResult -Result $errorResult -Counters $Counters
+            Write-OperationResult -Result $errorResult
         }
     }
 }
 
 # Process file mappings for a program.
 function Process-FileMapping {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$ProgramContext,
-        [Parameter(Mandatory=$true)][hashtable]$Counters
-    )
+    param([Parameter(Mandatory=$true)][psobject]$ProgramContext)
 
-    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'files' -ItemProcessor {
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -PropertyName 'files' -ItemProcessor {
         param($file, $context)
         $storePath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $file.store
         $livePath = Normalize-Path (Expand-EnvTokens -Text $file.live)
@@ -581,18 +538,13 @@ function Process-FileMapping {
 
 # Process directory mappings for a program.
 function Process-DirectoryMapping {
-    param(
-        [Parameter(Mandatory=$true)][psobject]$ProgramContext,
-        [Parameter(Mandatory=$true)][hashtable]$Counters
-    )
+    param([Parameter(Mandatory=$true)][psobject]$ProgramContext)
 
-    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'directories' -ItemProcessor {
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -PropertyName 'directories' -ItemProcessor {
         param($directory, $context)
         $storeDirPath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $directory.store
         $liveDirPath = Normalize-Path (Expand-EnvTokens -Text $directory.live)
         $directoryResult = Copy-Directory -StorePath $storeDirPath -LivePath $liveDirPath
-
-        # Return all individual file results.
         $directoryResult.Results
     }
 }
@@ -601,11 +553,10 @@ function Process-DirectoryMapping {
 function Process-RegistryFiles {
     param(
         [Parameter(Mandatory=$true)][psobject]$ProgramContext,
-        [Parameter(Mandatory=$true)][hashtable]$Counters,
         [Parameter(Mandatory=$true)][bool]$HasAdminRights
     )
 
-    Invoke-ItemProcessor -ProgramContext $ProgramContext -Counters $Counters -PropertyName 'registryFiles' -ItemProcessor {
+    Invoke-ItemProcessor -ProgramContext $ProgramContext -PropertyName 'registryFiles' -ItemProcessor {
         param($registryFile, $context)
         $registryFilePath = Resolve-StorePath -ProgramBasePath $context.ProgramBasePath -RelativePath $registryFile
 
@@ -643,32 +594,13 @@ function Invoke-ProgramRestore {
         [Parameter(Mandatory=$true)][bool]$HasAdminRights
     )
 
-    $programCounters = @{
-        Succeeded = 0
-        Skipped   = 0
-        Missing   = 0
-        Failed    = 0
-        Imported  = 0
-    }
-
     Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
     Write-Host ("Processing {0}." -f $ProgramContext.Name)
 
-    Process-FileMapping -ProgramContext $ProgramContext -Counters $programCounters
-    Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $programCounters
-    Process-RegistryFiles -ProgramContext $ProgramContext -Counters $programCounters -HasAdminRights $HasAdminRights
+    Process-FileMapping -ProgramContext $ProgramContext
+    Process-DirectoryMapping -ProgramContext $ProgramContext
+    Process-RegistryFiles -ProgramContext $ProgramContext -HasAdminRights $HasAdminRights
     Show-ManualItems -ProgramContext $ProgramContext
-
-    return $programCounters
-}
-
-# Prepare global tallies.
-$OverallCounters = @{
-    Succeeded = 0
-    Skipped   = 0
-    Missing   = 0
-    Failed    = 0
-    Imported  = 0
 }
 
 # Read and parse the map configuration.
@@ -692,25 +624,21 @@ foreach ($programDef in $ProgramDefinitions) {
     Test-PropertyExists -Object $programDef -PropertyName 'name' -Context 'Program entry'
     Test-NonEmptyString -Value $programDef.name -PropertyName 'name' -Context 'Program entry'
 
-    # Validate file mappings if present.
     Assert-ListProperty -Object $programDef -PropertyName 'files' -Context 'Program entry' -ItemValidator {
         param($file)
         Assert-MappingObject -Mapping $file -MappingType 'File'
     }
 
-    # Validate directory mappings if present.
     Assert-ListProperty -Object $programDef -PropertyName 'directories' -Context 'Program entry' -ItemValidator {
         param($directory)
         Assert-MappingObject -Mapping $directory -MappingType 'Directory'
     }
 
-    # Validate manual checklist if present.
     Assert-ListProperty -Object $programDef -PropertyName 'manual' -Context 'Program entry' -ItemValidator {
         param($manualItem)
         Test-NonEmptyString -Value $manualItem -PropertyName 'manual item' -Context 'Manual checklist'
     }
 
-    # Validate registry files if present.
     Assert-ListProperty -Object $programDef -PropertyName 'registryFiles' -Context 'Program entry' -ItemValidator {
         param($registryFile)
         Test-NonEmptyString -Value $registryFile -PropertyName 'registry file' -Context 'Registry file list'
@@ -737,18 +665,7 @@ $HasAdminRights = Test-IsElevated
 
 # Process each program entry.
 foreach ($programContext in $ProgramContexts) {
-    $programCounters = Invoke-ProgramRestore -ProgramContext $programContext -HasAdminRights $HasAdminRights
-
-    $OverallCounters.Succeeded += $programCounters.Succeeded
-    $OverallCounters.Skipped   += $programCounters.Skipped
-    $OverallCounters.Missing   += $programCounters.Missing
-    $OverallCounters.Failed    += $programCounters.Failed
-    $OverallCounters.Imported  += $programCounters.Imported
+    Invoke-ProgramRestore -ProgramContext $programContext -HasAdminRights $HasAdminRights
 }
 
-# Print overall results.
-Write-Host "`nSUMMARY: " -ForegroundColor DarkCyan -NoNewline
-Write-Host ("{0} Succeeded, {1} Skipped, {2} Missing, {3} Failed, {4} Imported" -f $OverallCounters.Succeeded, $OverallCounters.Skipped, $OverallCounters.Missing, $OverallCounters.Failed, $OverallCounters.Imported)
-
-# Exit with appropriate status.
-exit ([int](($OverallCounters.Failed -gt 0) -or ($OverallCounters.Missing -gt 0)))
+exit 0
