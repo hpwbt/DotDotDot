@@ -3,11 +3,8 @@ $ErrorActionPreference = 'Stop'
 
 # Display verification message.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Verifying that Windows is activated with a Pro license."
+Write-Host "Verifying that Windows is activated with a Pro license . . ."
 
-# Check Windows activation status.
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Checking activation status. . ."
 try {
     $LicenseInfo = Get-CimInstance -ClassName SoftwareLicensingProduct |
         Where-Object { $_.Name -like "Windows*" -and $_.PartialProductKey }
@@ -22,9 +19,6 @@ try {
     exit 1
 }
 
-# Check Windows edition and version.
-Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Checking Windows edition. . ."
 try {
     $OSInfo = Get-CimInstance -ClassName Win32_OperatingSystem
     if ($OSInfo.Caption -notlike "*Windows 11 Pro*") {
@@ -39,5 +33,5 @@ try {
 }
 
 # Confirm success.
-Write-Host "`nSUCCESS: " -ForegroundColor Green -NoNewline
+Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
 Write-Host "Verification passed."
