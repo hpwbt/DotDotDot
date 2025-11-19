@@ -26,17 +26,17 @@ foreach ($var in $PermanentVariables) {
 
     if ($requiresElevation -and -not $IsElevated) {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host ("Skipped setting {0}. Requires elevation." -f $var.Name)
+        Write-Host ("Skipped setting [{0}]. Requires elevation." -f $var.Name)
         continue
     }
 
     try {
         [Environment]::SetEnvironmentVariable($var.Name, $var.Value, $var.Scope)
         Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host ("{0} set." -f $var.Name)
+        Write-Host ("[{0}] set." -f $var.Name)
     } catch {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host ("Failed to set {0}." -f $var.Name)
+        Write-Host ("Failed to set [{0}]." -f $var.Name)
     }
 }
 
@@ -45,20 +45,20 @@ $ProfilesRootPath = Join-Path $env:APPDATA 'LibreWolf\Profiles'
 
 if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
     Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-    Write-Host "Skipped setting LIBREPROFILE. LibreWolf profiles directory not found."
+    Write-Host "Skipped setting [LIBREPROFILE]. LibreWolf profiles directory not found."
 } else {
     $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
 
     if ($ProfileMatches.Count -eq 0) {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Skipped setting LIBREPROFILE. No default-default LibreWolf profiles found."
+        Write-Host "Skipped setting [LIBREPROFILE]. No default-default LibreWolf profiles found."
     } elseif ($ProfileMatches.Count -eq 1) {
         $env:LIBREPROFILE = $ProfileMatches[0].FullName
         Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host "LIBREPROFILE set for current session."
+        Write-Host "[LIBREPROFILE] set for current session."
     } else {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Skipped setting LIBREPROFILE. Multiple default-default LibreWolf profiles found."
+        Write-Host "Skipped setting [LIBREPROFILE]. Multiple default-default LibreWolf profiles found."
     }
 }
 

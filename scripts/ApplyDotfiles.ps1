@@ -26,7 +26,7 @@ if ($DotfilesRootPath -ne $ExpectedDirPath) {
 
 # Verify the configuration file exists.
 if (-not (Test-Path -LiteralPath $MapPath)) {
-    throw "ERROR: Map configuration file not found at: $MapPath."
+    throw "ERROR: Map configuration file not found at '$MapPath'."
 }
 
 # Check if an object has a specific property.
@@ -55,7 +55,7 @@ function Test-PropertyExists {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not (Test-HasProperty -Object $Object -PropertyName $PropertyName)) {
-        throw "ERROR: $Context lacks a $PropertyName."
+        throw "ERROR: $Context lacks a [$PropertyName]."
     }
 }
 
@@ -67,7 +67,7 @@ function Test-NonEmptyString {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [string]) -or [string]::IsNullOrWhiteSpace($Value)) {
-        throw "ERROR: $Context $PropertyName must be a non-empty text value."
+        throw "ERROR: $Context [$PropertyName] must be a non-empty text value."
     }
 }
 
@@ -79,7 +79,7 @@ function Test-IsList {
         [Parameter(Mandatory=$true)][string]$Context
     )
     if (-not ($Value -is [System.Collections.IEnumerable]) -or ($Value -is [string])) {
-        throw "ERROR: $Context $PropertyName must be provided as a list."
+        throw "ERROR: $Context [$PropertyName] must be provided as a list."
     }
 }
 
@@ -163,7 +163,7 @@ function Resolve-StorePath {
     $combinedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ProgramBasePath, $normalizedRelative))
 
     if (-not $combinedPath.StartsWith($ProgramBasePath, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "ERROR: Store path escapes the program's store folder: $RelativePath."
+        throw "ERROR: Store path escapes the program's store folder: '$RelativePath'."
     }
 
     $combinedPath
@@ -251,7 +251,7 @@ function Copy-File {
             Status  = $StatusCodes.Skipped
             Store   = $StorePath
             Live    = $LivePath
-            Message = "Environment variable `${0} not set." -f $undefinedVar
+            Message = "Environment variable [$undefinedVar] not set."
         }
     }
 
@@ -312,7 +312,7 @@ function Copy-Directory {
                 Status  = $StatusCodes.Skipped
                 Store   = $StorePath
                 Live    = $LivePath
-                Message = "Environment variable `${0} not set." -f $undefinedVar
+                Message = "Environment variable [$undefinedVar] not set."
             })
         }
     }
@@ -431,26 +431,26 @@ function Write-OperationResult {
         $StatusCodes.Succeeded {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
                 Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-                Write-Host ('{0} -> {1}.' -f $Result.Store, $Result.Live)
+                Write-Host ("'{0}' -> '{1}'." -f $Result.Store, $Result.Live)
             } else {
                 Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-                Write-Host ('{0}.' -f $Result.File)
+                Write-Host ("'{0}'." -f $Result.File)
             }
         }
         $StatusCodes.Skipped {
             if (Test-HasProperty -Object $Result -PropertyName 'Live') {
                 Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
                 if ($Result.Message) {
-                    Write-Host ('Skipped {0}. {1}' -f $Result.Live, $Result.Message)
+                    Write-Host ("Skipped '{0}'. {1}" -f $Result.Live, $Result.Message)
                 } else {
-                    Write-Host ('Skipped {0}.' -f $Result.Live)
+                    Write-Host ("Skipped '{0}'." -f $Result.Live)
                 }
             } else {
                 Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
                 if ($Result.Message) {
-                    Write-Host ('Skipped {0}. {1}' -f $Result.File, $Result.Message)
+                    Write-Host ("Skipped '{0}'. {1}" -f $Result.File, $Result.Message)
                 } else {
-                    Write-Host ('Skipped {0}.' -f $Result.File)
+                    Write-Host ("Skipped '{0}'." -f $Result.File)
                 }
             }
         }
@@ -458,16 +458,16 @@ function Write-OperationResult {
             if (Test-HasProperty -Object $Result -PropertyName 'Store') {
                 Write-Host "ERROR: " -ForegroundColor Red -NoNewline
                 if ($Result.Message) {
-                    Write-Host ('Missing {0}. {1}' -f $Result.Store, $Result.Message)
+                    Write-Host ("Missing '{0}'. {1}" -f $Result.Store, $Result.Message)
                 } else {
-                    Write-Host ('Missing {0}.' -f $Result.Store)
+                    Write-Host ("Missing '{0}'." -f $Result.Store)
                 }
             } else {
                 Write-Host "ERROR: " -ForegroundColor Red -NoNewline
                 if ($Result.Message) {
-                    Write-Host ('Missing {0}. {1}' -f $Result.File, $Result.Message)
+                    Write-Host ("Missing '{0}'. {1}" -f $Result.File, $Result.Message)
                 } else {
-                    Write-Host ('Missing {0}.' -f $Result.File)
+                    Write-Host ("Missing '{0}'." -f $Result.File)
                 }
             }
         }
@@ -482,11 +482,11 @@ function Write-OperationResult {
                 '<unknown>'
             }
             Write-Host "ERROR: " -ForegroundColor Red -NoNewline
-            Write-Host ('Failed {0}: {1}' -f $displayPath, $Result.Message)
+            Write-Host ("Failed '{0}': {1}" -f $displayPath, $Result.Message)
         }
         $StatusCodes.Imported {
             Write-Host "IMPORTED: " -ForegroundColor Green -NoNewline
-            Write-Host ('{0}.' -f $Result.File)
+            Write-Host ("'{0}'." -f $Result.File)
         }
     }
 }
@@ -652,7 +652,7 @@ function Invoke-ProgramRestore {
     }
 
     Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host ("Processing {0}." -f $ProgramContext.Name)
+    Write-Host ("Processing [{0}]." -f $ProgramContext.Name)
 
     Process-FileMapping -ProgramContext $ProgramContext -Counters $programCounters
     Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $programCounters

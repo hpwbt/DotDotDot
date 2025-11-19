@@ -18,6 +18,15 @@ if ($DotfilesRootPath -ne $ExpectedDirPath) {
     exit 1
 }
 
+# Check elevation state.
+try {
+    $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+    $IsElevated = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+} catch {
+    $IsElevated = $false
+}
+
 # Define source and destination paths.
 $WallpaperSourceDir = Join-Path $StoreRootPath 'Windows Explorer\Wallpaper'
 $LockScreenSourceDir = Join-Path $StoreRootPath 'Windows Explorer\Lock screen'
@@ -76,30 +85,43 @@ if (-not (Test-Path -LiteralPath $LockScreenSourceDir)) {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
         Write-Host "Skipped lock screen. Multiple files found in store."
     } else {
-        try {
-            # Create destination directory if needed.
-            if (-not (Test-Path -LiteralPath $LockScreenDestDir)) {
-                New-Item -ItemType Directory -Path $LockScreenDestDir -Force | Out-Null
-            }
-
-            # Copy file to destination.
-            $sourceFile = $lockScreenFiles[0]
-            $destFile = Join-Path $LockScreenDestDir $sourceFile.Name
-            Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
-
-            # Set lock screen via policy.
-            $regPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
-            if (-not (Test-Path $regPath)) {
-                New-Item -Path $regPath -Force | Out-Null
-            }
-            Set-ItemProperty -Path $regPath -Name LockScreenImage -Value $destFile
-
-
-            Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-            Write-Host "Lock screen set."
-        } catch {
+        if (-not $IsElevated) {
             Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-            Write-Host "Failed to set lock screen."
+            Write-Host "Skipped lock screen. Requires elevation."
+        } else {
+            try {
+                # Create destination directory if needed.
+                if (-not (Test-Path -LiteralPath $LockScreenDestDir)) {
+                    New-Item -ItemType Directory -Path $LockScreenDestDir -Force | Out-Null
+                }
+
+                # Copy file to destination.
+                $sourceFile = $lockScreenFiles[0]
+                $destFile = Join-Path $LockScreenDestDir $sourceFile.Name
+                Copy-Item -LiteralPath $sourceFile.FullName -Destination $destFile -Force
+
+                # Set lock screen registry.
+                $regPath1 = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
+                $regPath2 = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP'
+
+                if (-not (Test-Path $regPath1)) {
+                    New-Item -Path $regPath1 -Force | Out-Null
+                }
+                if (-not (Test-Path $regPath2)) {
+                    New-Item -Path $regPath2 -Force | Out-Null
+                }
+
+                Set-ItemProperty -Path $regPath1 -Name LockScreenImage -Value $destFile -Type String
+                Set-ItemProperty -Path $regPath2 -Name LockScreenImageStatus -Value 1 -Type DWord
+                Set-ItemProperty -Path $regPath2 -Name LockScreenImagePath -Value $destFile -Type String
+                Set-ItemProperty -Path $regPath2 -Name LockScreenImageUrl -Value $destFile -Type String
+
+                Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+                Write-Host "Lock screen set."
+            } catch {
+                Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+                Write-Host "Failed to set lock screen."
+            }
         }
     }
 }
