@@ -63,20 +63,3 @@ if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
 }
 
 exit 0
-```
-
-**Changes made:**
-
-1. ✅ **Added INFO at top:** `"Setting environment variables . . ."`
-2. ✅ **Removed all `Value: "..."` INFO lines** - just SUCCESS messages now
-3. ✅ **Removed `Path: ...` for LIBREPROFILE** - just SUCCESS message
-
-**Output now:**
-```
-INFO: Setting environment variables . . .
-
-SUCCESS: NODE_REPL_HISTORY set.
-
-SUCCESS: PYTHON_HISTORY set.
-
-SUCCESS: LIBREPROFILE set for current session.
