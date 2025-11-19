@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 
 # Display verification message.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Verifying that Windows is activated with a Pro license . . ."
+Write-Host "`nVerifying that Windows is activated with a Pro license . . ."
 
 try {
     $LicenseInfo = Get-CimInstance -ClassName SoftwareLicensingProduct |
