@@ -652,7 +652,7 @@ function Invoke-ProgramRestore {
     }
 
     Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host ("Processing [{0}]." -f $ProgramContext.Name)
+    Write-Host ("Processing {0}." -f $ProgramContext.Name)
 
     Process-FileMapping -ProgramContext $ProgramContext -Counters $programCounters
     Process-DirectoryMapping -ProgramContext $ProgramContext -Counters $programCounters
