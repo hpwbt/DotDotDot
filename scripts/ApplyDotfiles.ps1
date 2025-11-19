@@ -20,11 +20,7 @@ $MapPath = Join-Path $DotfilesRootPath 'map.json'
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
 if ($DotfilesRootPath -ne $ExpectedDirPath) {
     Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host ("This script must be run from inside '{0}'." -f $ExpectedDirPath)
-    Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host ("Current location: {0}." -f $DotfilesRootPath)
-    Write-Host "INFO: " -ForegroundColor Cyan -NoNewline
-    Write-Host ("Expected location: {0}." -f $ExpectedDirPath)
+    Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotfilesRootPath)
     exit 1
 }
 
