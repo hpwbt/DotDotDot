@@ -22,15 +22,18 @@ if not exist "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1" (
     pause
     exit /b 1
 )
-
-if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentalVariables.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetEnvironmentalVariables.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetEnvironmentVariables.ps1 not found.'"
     pause
     exit /b 1
 )
-
-if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyDotfiles.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\ApplyWallpaperAndLockscreen.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplyWallpaperAndLockscreen.ps1 not found.'"
+    pause
+    exit /b 1
+)
+if not exist "%SCRIPTS_DIR_PATH%\ApplySettings.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'ApplySettings.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -42,15 +45,22 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute SetEnvironmentalVariables script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\SetEnvironmentalVariables.ps1"
+rem Execute SetEnvironmentVariables script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
 )
 
-rem Execute ApplyDotfiles script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1"
+rem Execute ApplyWallpaperAndLockscreen script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplyWallpaperAndLockscreen.ps1"
+if errorlevel 1 (
+    pause
+    exit /b 1
+)
+
+rem Execute ApplySettings script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\ApplySettings.ps1"
 if errorlevel 1 (
     pause
     exit /b 1
