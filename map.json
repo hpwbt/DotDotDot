@@ -86,7 +86,8 @@
         "Align the Taskbar to the Left and Hide the Search Box.reg",
         "Hide the Task View Button in the Taskbar.reg",
         "Hide Widgets in the Taskbar.reg",
-        "Hide the Recycle Bin Icon in the Desktop and Pin It to the Navigation Pane in Windows Explorer.reg"
+        "Hide the Recycle Bin Icon in the Desktop.reg",
+        "Pin the Recycle Bin to the Navigation Pane in Windows Explorer.reg"
       ]
     },
     {
