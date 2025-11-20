@@ -11,6 +11,10 @@ $PublicDesktopPath = 'C:\Users\Public\Desktop'
 $TaskbarPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
 $TaskbarImplicitPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\ImplicitAppShortcuts'
 
+# Define XML layout file paths.
+$UserLayoutXmlPath = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml'
+$DefaultLayoutXmlPath = 'C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\LayoutModification.xml'
+
 # Clean user desktop.
 if (Test-Path -LiteralPath $UserDesktopPath) {
     try {
@@ -89,16 +93,27 @@ if (Test-Path -LiteralPath $TaskbarImplicitPath) {
     }
 }
 
-# Clear taskbar registry data.
-$TaskbarRegPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband'
-if (Test-Path $TaskbarRegPath) {
+# Remove user layout XML file to prevent auto-pinning.
+if (Test-Path -LiteralPath $UserLayoutXmlPath) {
     try {
-        Remove-Item -Path $TaskbarRegPath -Recurse -Force
+        Remove-Item -LiteralPath $UserLayoutXmlPath -Force
         Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host "Taskbar registry data cleared."
+        Write-Host "User taskbar layout file removed."
     } catch {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to clear taskbar registry data."
+        Write-Host "Failed to remove user taskbar layout file."
+    }
+}
+
+# Remove default layout XML file to prevent auto-pinning.
+if (Test-Path -LiteralPath $DefaultLayoutXmlPath) {
+    try {
+        Remove-Item -LiteralPath $DefaultLayoutXmlPath -Force
+        Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "Default taskbar layout file removed."
+    } catch {
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Failed to remove default taskbar layout file."
     }
 }
 
