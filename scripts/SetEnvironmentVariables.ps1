@@ -47,7 +47,7 @@ if (-not (Test-Path -LiteralPath $ProfilesRootPath)) {
     Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
     Write-Host "Skipped setting [LIBREPROFILE]. LibreWolf profiles directory not found."
 } else {
-    $ProfileMatches = @(Get-ChildItem -Path $ProfilesRootPath -Directory -Filter '*.default-default')
+    $ProfileMatches = @(Get-ChildItem -LiteralPath $ProfilesRootPath -Directory -Filter '*.default-default')
 
     if ($ProfileMatches.Count -eq 0) {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline

@@ -13,7 +13,7 @@ $StoreRootPath = Join-Path $DotfilesRootPath 'store'
 # Verify we're running from inside %USERPROFILE%\Dotfiles.
 $ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
 if ($DotfilesRootPath -ne $ExpectedDirPath) {
-    Write-Host "ERROR: " -ForegroundColor Red -NoNewline
+    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
     Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotfilesRootPath)
     exit 1
 }
