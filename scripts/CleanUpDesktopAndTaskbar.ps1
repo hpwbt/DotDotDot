@@ -9,6 +9,7 @@ Write-Host "Cleaning up desktop and taskbar . . ."
 $UserDesktopPath = Join-Path $env:USERPROFILE 'Desktop'
 $PublicDesktopPath = 'C:\Users\Public\Desktop'
 $TaskbarPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
+$TaskbarImplicitPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\ImplicitAppShortcuts'
 
 # Clean user desktop.
 if (Test-Path -LiteralPath $UserDesktopPath) {
@@ -71,6 +72,34 @@ if (Test-Path -LiteralPath $TaskbarPinsPath) {
 } else {
     Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
     Write-Host "Taskbar pins directory not found."
+}
+
+# Clean implicit app shortcuts (UWP/Store apps).
+if (Test-Path -LiteralPath $TaskbarImplicitPath) {
+    try {
+        $items = @(Get-ChildItem -LiteralPath $TaskbarImplicitPath -Force)
+        if ($items.Count -gt 0) {
+            $items | Remove-Item -Recurse -Force
+            Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+            Write-Host "Implicit taskbar shortcuts cleared."
+        }
+    } catch {
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Failed to clear implicit taskbar shortcuts."
+    }
+}
+
+# Clear taskbar registry data.
+$TaskbarRegPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband'
+if (Test-Path $TaskbarRegPath) {
+    try {
+        Remove-Item -Path $TaskbarRegPath -Recurse -Force
+        Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
+        Write-Host "Taskbar registry data cleared."
+    } catch {
+        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+        Write-Host "Failed to clear taskbar registry data."
+    }
 }
 
 exit 0
