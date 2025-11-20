@@ -9,11 +9,7 @@ Write-Host "Cleaning up desktop and taskbar . . ."
 $UserDesktopPath = Join-Path $env:USERPROFILE 'Desktop'
 $PublicDesktopPath = 'C:\Users\Public\Desktop'
 $TaskbarPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
-$TaskbarImplicitPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\ImplicitAppShortcuts'
-
-# Define XML layout file paths.
-$UserLayoutXmlPath = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell\LayoutModification.xml'
-$DefaultLayoutXmlPath = 'C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\LayoutModification.xml'
+$ImplicitPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\ImplicitAppShortcuts'
 
 # Clean user desktop.
 if (Test-Path -LiteralPath $UserDesktopPath) {
@@ -67,7 +63,7 @@ if (Test-Path -LiteralPath $TaskbarPinsPath) {
             Write-Host "Taskbar pins cleared."
         } else {
             Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-            Write-Host "Taskbar already empty."
+            Write-Host "Taskbar pins already empty."
         }
     } catch {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
@@ -78,43 +74,41 @@ if (Test-Path -LiteralPath $TaskbarPinsPath) {
     Write-Host "Taskbar pins directory not found."
 }
 
-# Clean implicit app shortcuts (UWP/Store apps).
-if (Test-Path -LiteralPath $TaskbarImplicitPath) {
+# Clean implicit app shortcuts.
+if (Test-Path -LiteralPath $ImplicitPinsPath) {
     try {
-        $items = @(Get-ChildItem -LiteralPath $TaskbarImplicitPath -Force)
+        $items = @(Get-ChildItem -LiteralPath $ImplicitPinsPath -Force)
         if ($items.Count -gt 0) {
             $items | Remove-Item -Recurse -Force
             Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-            Write-Host "Implicit taskbar shortcuts cleared."
+            Write-Host "Implicit app shortcuts cleared."
+        } else {
+            Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+            Write-Host "Implicit app shortcuts already empty."
         }
     } catch {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to clear implicit taskbar shortcuts."
+        Write-Host "Failed to clear implicit app shortcuts."
     }
+} else {
+    Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "Implicit app shortcuts directory not found."
 }
 
-# Remove user layout XML file to prevent auto-pinning.
-if (Test-Path -LiteralPath $UserLayoutXmlPath) {
+# Clear taskbar registry data.
+$TaskbarRegPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband'
+if (Test-Path $TaskbarRegPath) {
     try {
-        Remove-Item -LiteralPath $UserLayoutXmlPath -Force
+        Remove-Item -Path $TaskbarRegPath -Recurse -Force
         Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host "User taskbar layout file removed."
+        Write-Host "Taskbar registry data cleared."
     } catch {
         Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to remove user taskbar layout file."
+        Write-Host "Failed to clear taskbar registry data."
     }
-}
-
-# Remove default layout XML file to prevent auto-pinning.
-if (Test-Path -LiteralPath $DefaultLayoutXmlPath) {
-    try {
-        Remove-Item -LiteralPath $DefaultLayoutXmlPath -Force
-        Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-        Write-Host "Default taskbar layout file removed."
-    } catch {
-        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to remove default taskbar layout file."
-    }
+} else {
+    Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
+    Write-Host "Taskbar registry key not found."
 }
 
 exit 0
