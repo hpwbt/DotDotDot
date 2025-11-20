@@ -104,4 +104,5 @@ pause >nul
 
 rem Restart computer.
 shutdown /r /t 0
+
 endlocal
