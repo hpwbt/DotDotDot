@@ -12,15 +12,15 @@ $StatusCodes = @{
 
 # Resolve paths from script location.
 $ScriptDirPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$DotfilesRootPath = Split-Path $ScriptDirPath -Parent
-$StoreRootPath = Join-Path $DotfilesRootPath 'store'
-$MapPath = Join-Path $DotfilesRootPath 'map.json'
+$DotDotDotRootPath = Split-Path $ScriptDirPath -Parent
+$StoreRootPath = Join-Path $DotDotDotRootPath 'store'
+$MapPath = Join-Path $DotDotDotRootPath 'map.json'
 
-# Verify we're running from inside %USERPROFILE%\Dotfiles.
-$ExpectedDirPath = Join-Path $env:USERPROFILE 'Dotfiles'
-if ($DotfilesRootPath -ne $ExpectedDirPath) {
+# Verify we're running from inside %USERPROFILE%\DotDotDot.
+$ExpectedDirPath = Join-Path $env:USERPROFILE 'DotDotDot'
+if ($DotDotDotRootPath -ne $ExpectedDirPath) {
     Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotfilesRootPath)
+    Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotDotDotRootPath)
     exit 1
 }
 

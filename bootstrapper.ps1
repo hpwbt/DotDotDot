@@ -7,9 +7,9 @@ Write-Host "Downloading Dotfiles from GitHub . . ."
 
 # Define paths.
 $RepoUrl = 'https://github.com/hpwbt/DotDotDot/archive/refs/heads/main.zip'
-$TempZipPath = Join-Path $env:TEMP 'Dotfiles.zip'
-$TempExtractPath = Join-Path $env:TEMP 'Dotfiles-Extract'
-$TargetPath = Join-Path $env:USERPROFILE 'Dotfiles'
+$TempZipPath = Join-Path $env:TEMP 'DotDotDot.zip'
+$TempExtractPath = Join-Path $env:TEMP 'DotDotDot-Extract'
+$TargetPath = Join-Path $env:USERPROFILE 'DotDotDot'
 
 # Remove existing temp files if they exist.
 if (Test-Path -LiteralPath $TempZipPath) {
