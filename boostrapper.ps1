@@ -6,7 +6,7 @@ Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
 Write-Host "Downloading Dotfiles from GitHub . . ."
 
 # Define paths.
-$RepoUrl = 'https://github.com/hpwbt/Dot-Dot-Dot/archive/refs/heads/main.zip'
+$RepoUrl = 'https://github.com/hpwbt/DotDotDot/archive/refs/heads/main.zip'
 $TempZipPath = Join-Path $env:TEMP 'Dotfiles.zip'
 $TempExtractPath = Join-Path $env:TEMP 'Dotfiles-Extract'
 $TargetPath = Join-Path $env:USERPROFILE 'Dotfiles'
@@ -49,8 +49,8 @@ Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
 Write-Host "Installing Dotfiles . . ."
 
 try {
-    # GitHub extracts to Dot-Dot-Dot-main folder.
-    $ExtractedFolderPath = Join-Path $TempExtractPath 'Dot-Dot-Dot-main'
+    # GitHub extracts to DotDotDot-main folder.
+    $ExtractedFolderPath = Join-Path $TempExtractPath 'DotDotDot-main'
 
     # Remove existing Dotfiles folder if it exists.
     if (Test-Path -LiteralPath $TargetPath) {
