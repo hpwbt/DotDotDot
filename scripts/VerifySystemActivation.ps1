@@ -31,3 +31,5 @@ try {
     Write-Host "Windows is not activated."
     exit 1
 }
+
+exit 0
