@@ -42,8 +42,8 @@ if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanUpDesktopAndTaskbar.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanDesktopAndTaskbar.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -88,8 +88,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute CleanUpDesktopAndTaskbar script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1"
+rem Execute CleanDesktopAndTaskbar script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
