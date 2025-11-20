@@ -37,6 +37,11 @@ if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
     pause
     exit /b 1
 )
+if not exist "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanUpDesktopAndTaskbar.ps1 not found.'"
+    pause
+    exit /b 1
+)
 
 rem Execute VerifySystemActivation script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1"
@@ -70,14 +75,20 @@ if errorlevel 1 (
     exit /b 1
 )
 
+rem Execute CleanUpDesktopAndTaskbar script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1"
+if errorlevel 1 (
+    powershell -NoProfile -Command "Write-Host"
+    pause
+    exit /b 1
+)
+
 rem Display success message.
 powershell -NoProfile -Command "Write-Host \"`nSUMMARY: \" -ForegroundColor DarkCyan -NoNewline; Write-Host 'Tasks finished.'"
 powershell -NoProfile -Command "Write-Host"
-
 <nul set /p ="Press any key to restart . . ."
 pause >nul
 
 rem Restart computer.
 shutdown /r /t 0
-
 endlocal
