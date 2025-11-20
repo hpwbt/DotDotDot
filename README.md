@@ -1,6 +1,6 @@
 # DotDotDot
 
-An **opinionated** Windows 11 Pro system setup script.
+An **opinionated** Windows 11 system setup script.
 
 ## Usage
 ```powershell
