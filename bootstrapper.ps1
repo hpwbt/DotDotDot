@@ -3,21 +3,14 @@ $ErrorActionPreference = 'Stop'
 
 # Display download message.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Downloading Dotfiles from GitHub . . ."
+Write-Host "Downloading DotDotDot from GitHub . . ."
 
 # Define paths.
 $RepoUrl = 'https://github.com/hpwbt/DotDotDot/archive/refs/heads/main.zip'
-$TempZipPath = Join-Path $env:TEMP 'DotDotDot.zip'
-$TempExtractPath = Join-Path $env:TEMP 'DotDotDot-Extract'
-$TargetPath = Join-Path $env:USERPROFILE 'DotDotDot'
-
-# Remove existing temp files if they exist.
-if (Test-Path -LiteralPath $TempZipPath) {
-    Remove-Item -LiteralPath $TempZipPath -Force
-}
-if (Test-Path -LiteralPath $TempExtractPath) {
-    Remove-Item -LiteralPath $TempExtractPath -Recurse -Force
-}
+$uuid = [guid]::NewGuid().ToString().ToLower()
+$TempZipPath = Join-Path $env:TEMP "$uuid.zip"
+$TempExtractPath = Join-Path $env:TEMP "$uuid-extract"
+$TargetPath = Join-Path $env:TEMP $uuid
 
 # Download repository.
 try {
@@ -46,24 +39,19 @@ try {
 
 # Move extracted folder to target location.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
-Write-Host "Installing Dotfiles . . ."
+Write-Host "Installing DotDotDot . . ."
 
 try {
     # GitHub extracts to DotDotDot-main folder.
     $ExtractedFolderPath = Join-Path $TempExtractPath 'DotDotDot-main'
 
-    # Remove existing Dotfiles folder if it exists.
-    if (Test-Path -LiteralPath $TargetPath) {
-        Remove-Item -LiteralPath $TargetPath -Recurse -Force
-    }
-
     # Move extracted folder to target location.
     Move-Item -LiteralPath $ExtractedFolderPath -Destination $TargetPath -Force
     Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-    Write-Host ("Dotfiles installed to '{0}'." -f $TargetPath)
+    Write-Host ("DotDotDot installed to '{0}'." -f $TargetPath)
 } catch {
     Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host "Failed to install Dotfiles."
+    Write-Host "Failed to install DotDotDot."
     exit 1
 }
 

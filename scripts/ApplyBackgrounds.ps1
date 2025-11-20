@@ -10,14 +10,6 @@ $ScriptDirPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $DotDotDotRootPath = Split-Path $ScriptDirPath -Parent
 $StoreRootPath = Join-Path $DotDotDotRootPath 'store'
 
-# Verify we're running from inside %USERPROFILE%\DotDotDot.
-$ExpectedDirPath = Join-Path $env:USERPROFILE 'DotDotDot'
-if ($DotDotDotRootPath -ne $ExpectedDirPath) {
-    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotDotDotRootPath)
-    exit 1
-}
-
 # Check elevation state.
 try {
     $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()

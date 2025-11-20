@@ -16,14 +16,6 @@ $DotDotDotRootPath = Split-Path $ScriptDirPath -Parent
 $StoreRootPath = Join-Path $DotDotDotRootPath 'store'
 $MapPath = Join-Path $DotDotDotRootPath 'map.json'
 
-# Verify we're running from inside %USERPROFILE%\DotDotDot.
-$ExpectedDirPath = Join-Path $env:USERPROFILE 'DotDotDot'
-if ($DotDotDotRootPath -ne $ExpectedDirPath) {
-    Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host ("This script must be run in '{0}'. Currently it's running in '{1}'." -f $ExpectedDirPath, $DotDotDotRootPath)
-    exit 1
-}
-
 # Verify the configuration file exists.
 if (-not (Test-Path -LiteralPath $MapPath)) {
     throw "ERROR: Map configuration file not found at '$MapPath'."
