@@ -22,6 +22,11 @@ if not exist "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1" (
     pause
     exit /b 1
 )
+if not exist "%SCRIPTS_DIR_PATH%\UpdateWinget.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'UpdateWinget.ps1 not found.'"
+    pause
+    exit /b 1
+)
 if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetEnvironmentVariables.ps1 not found.'"
     pause
@@ -37,14 +42,22 @@ if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanDesktopAndTaskbar.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanUpDesktopAndTaskbar.ps1 not found.'"
     pause
     exit /b 1
 )
 
 rem Execute VerifySystemActivation script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1"
+if errorlevel 1 (
+    powershell -NoProfile -Command "Write-Host"
+    pause
+    exit /b 1
+)
+
+rem Execute UpdateWinget script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\UpdateWinget.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
@@ -75,8 +88,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute CleanDesktopAndTaskbar script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1"
+rem Execute CleanUpDesktopAndTaskbar script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanUpDesktopAndTaskbar.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
