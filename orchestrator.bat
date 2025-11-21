@@ -57,11 +57,6 @@ if not exist "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1" (
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\UnpinItemsFromStartMenu.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'UnpinItemsFromStartMenu.ps1 not found.'"
-    pause
-    exit /b 1
-)
 
 rem Execute VerifySystemActivation script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\VerifySystemActivation.ps1"
@@ -121,14 +116,6 @@ if errorlevel 1 (
 
 rem Execute CleanDesktopAndTaskbar script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1"
-if errorlevel 1 (
-    powershell -NoProfile -Command "Write-Host"
-    pause
-    exit /b 1
-)
-
-rem Execute UnpinItemsFromStartMenu script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\UnpinItemsFromStartMenu.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
