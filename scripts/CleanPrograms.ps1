@@ -23,8 +23,6 @@ $ProgramsToUninstall = @(
     'MSIX\Microsoft.OutlookForWindows_1.0.0.0_neutral__8wekyb3d8bbwe',
     'MSIX\Microsoft.Paint_11.2509.441.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.PowerAutomateDesktop_1.0.2029.0_x64__8wekyb3d8bbwe',
-    'MSIX\Microsoft.Services.Store.Engagement_10.0.23012.0_x64__8wekyb3d8bbwe',
-    'MSIX\Microsoft.Services.Store.Engagement_10.0.23012.0_x86__8wekyb3d8bbwe',
     'MSIX\Microsoft.StartExperiencesApp_1.168.2.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.StorePurchaseApp_22509.1401.1.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.Todos_0.148.3611.0_x64__8wekyb3d8bbwe',
