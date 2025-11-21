@@ -1,5 +1,6 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 
 # Display download message.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
