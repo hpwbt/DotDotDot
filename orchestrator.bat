@@ -57,8 +57,8 @@ if not exist "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1" (
     pause
     exit /b 1
 )
-if not exist "%SCRIPTS_DIR_PATH%\CleanStartMenu.ps1" (
-    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanStartMenu.ps1 not found.'"
+if not exist "%SCRIPTS_DIR_PATH%\UnpinItemsFromStartMenu.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'UnpinItemsFromStartMenu.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -127,8 +127,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Execute CleanStartMenu script.
-powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanStartMenu.ps1"
+rem Execute UnpinItemsFromStartMenu script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\UnpinItemsFromStartMenu.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
