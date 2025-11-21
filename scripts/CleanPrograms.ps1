@@ -23,7 +23,6 @@ $ProgramsToUninstall = @(
     'MSIX\Microsoft.OutlookForWindows_1.0.0.0_neutral__8wekyb3d8bbwe',
     'MSIX\Microsoft.Paint_11.2509.441.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.PowerAutomateDesktop_1.0.2029.0_x64__8wekyb3d8bbwe',
-    'MSIX\Microsoft.ScreenSketch_11.2307.59.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.Services.Store.Engagement_10.0.23012.0_x64__8wekyb3d8bbwe',
     'MSIX\Microsoft.Services.Store.Engagement_10.0.23012.0_x86__8wekyb3d8bbwe',
     'MSIX\Microsoft.StartExperiencesApp_1.168.2.0_x64__8wekyb3d8bbwe',
@@ -46,7 +45,8 @@ $ProgramsToUninstall = @(
     'MSIX\Microsoft.ZuneMusic_11.2501.9.0_x64__8wekyb3d8bbwe',
     'MSIX\MicrosoftCorporationII.QuickAssist_2.0.35.0_x64__8wekyb3d8bbwe',
     'MSIX\MicrosoftWindows.Client.WebExperience_525.31002.150.0_x64__cw5n1h2txyewy',
-    'MSIX\MicrosoftWindows.CrossDevice_0.25101.31.0_x64__cw5n1h2txyewy'
+    'MSIX\MicrosoftWindows.CrossDevice_0.25101.31.0_x64__cw5n1h2txyewy',
+    'MSIX\Microsoft.MicrosoftStickyNotes_4.0.6105.0_x64__8wekyb3d8bbwe'
 )
 
 # Uninstall each program.
