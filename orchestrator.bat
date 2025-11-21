@@ -32,6 +32,11 @@ if not exist "%SCRIPTS_DIR_PATH%\CleanPrograms.ps1" (
     pause
     exit /b 1
 )
+if not exist "%SCRIPTS_DIR_PATH%\InstallPrograms.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'InstallPrograms.ps1 not found.'"
+    pause
+    exit /b 1
+)
 if not exist "%SCRIPTS_DIR_PATH%\SetEnvironmentVariables.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'SetEnvironmentVariables.ps1 not found.'"
     pause
@@ -49,6 +54,11 @@ if not exist "%SCRIPTS_DIR_PATH%\ApplyDotfiles.ps1" (
 )
 if not exist "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1" (
     powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanDesktopAndTaskbar.ps1 not found.'"
+    pause
+    exit /b 1
+)
+if not exist "%SCRIPTS_DIR_PATH%\CleanStartMenu.ps1" (
+    powershell -NoProfile -Command "Write-Host 'ERROR: ' -ForegroundColor Red -NoNewline; Write-Host 'CleanStartMenu.ps1 not found.'"
     pause
     exit /b 1
 )
@@ -71,6 +81,14 @@ if errorlevel 1 (
 
 rem Execute CleanPrograms script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanPrograms.ps1"
+if errorlevel 1 (
+    powershell -NoProfile -Command "Write-Host"
+    pause
+    exit /b 1
+)
+
+rem Execute InstallPrograms script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\InstallPrograms.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
@@ -103,6 +121,14 @@ if errorlevel 1 (
 
 rem Execute CleanDesktopAndTaskbar script.
 powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanDesktopAndTaskbar.ps1"
+if errorlevel 1 (
+    powershell -NoProfile -Command "Write-Host"
+    pause
+    exit /b 1
+)
+
+rem Execute CleanStartMenu script.
+powershell -NoProfile -File "%SCRIPTS_DIR_PATH%\CleanStartMenu.ps1"
 if errorlevel 1 (
     powershell -NoProfile -Command "Write-Host"
     pause
