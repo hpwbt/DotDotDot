@@ -52,19 +52,10 @@ $ProgramsToUninstall = @(
 # Uninstall each program.
 foreach ($programId in $ProgramsToUninstall) {
     try {
-        # Run winget uninstall with silent and accept source agreements flags.
-        $process = Start-Process -FilePath 'winget' -ArgumentList "uninstall --id `"$programId`" --silent --accept-source-agreements" -NoNewWindow -Wait -PassThru
-
-        if ($process.ExitCode -eq 0) {
-            Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-            Write-Host ("Uninstalled '{0}'." -f $programId)
-        } else {
-            Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-            Write-Host ("Failed to uninstall '{0}'. May not be installed." -f $programId)
-        }
+        # Run winget uninstall with silent flag and suppress msstore errors.
+        & winget uninstall --id $programId --silent --accept-source-agreements --source winget 2>$null
     } catch {
-        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host ("Failed to uninstall '{0}'." -f $programId)
+        # Best effort - continue on any error.
     }
 }
 

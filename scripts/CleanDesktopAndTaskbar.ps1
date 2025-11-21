@@ -9,7 +9,6 @@ Write-Host "Cleaning up desktop and taskbar . . ."
 $UserDesktopPath = Join-Path $env:USERPROFILE 'Desktop'
 $PublicDesktopPath = 'C:\Users\Public\Desktop'
 $TaskbarPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
-$ImplicitPinsPath = Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\ImplicitAppShortcuts'
 
 # Clean user desktop.
 if (Test-Path -LiteralPath $UserDesktopPath) {
@@ -72,27 +71,6 @@ if (Test-Path -LiteralPath $TaskbarPinsPath) {
 } else {
     Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
     Write-Host "Taskbar pins directory not found."
-}
-
-# Clean implicit app shortcuts.
-if (Test-Path -LiteralPath $ImplicitPinsPath) {
-    try {
-        $items = @(Get-ChildItem -LiteralPath $ImplicitPinsPath -Force)
-        if ($items.Count -gt 0) {
-            $items | Remove-Item -Recurse -Force
-            Write-Host "SUCCESS: " -ForegroundColor Green -NoNewline
-            Write-Host "Implicit app shortcuts cleared."
-        } else {
-            Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-            Write-Host "Implicit app shortcuts already empty."
-        }
-    } catch {
-        Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-        Write-Host "Failed to clear implicit app shortcuts."
-    }
-} else {
-    Write-Host "WARNING: " -ForegroundColor Yellow -NoNewline
-    Write-Host "Implicit app shortcuts directory not found."
 }
 
 # Clear taskbar registry data.
