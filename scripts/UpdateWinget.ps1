@@ -1,5 +1,6 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 
 # Display update message.
 Write-Host "`nINFO: " -ForegroundColor Cyan -NoNewline
@@ -21,12 +22,14 @@ try {
     exit 1
 }
 
-# Find the .msixbundle asset.
-$msixAsset = $releaseInfo.assets | Where-Object { $_.name -like '*.msixbundle' } | Select-Object -First 1
+# Find the main DesktopAppInstaller .msixbundle asset.
+$msixAsset = $releaseInfo.assets | Where-Object {
+    $_.name -like 'Microsoft.DesktopAppInstaller*.msixbundle'
+} | Select-Object -First 1
 
 if (-not $msixAsset) {
     Write-Host "`nERROR: " -ForegroundColor Red -NoNewline
-    Write-Host "No .msixbundle file found in latest release."
+    Write-Host "No Microsoft.DesktopAppInstaller msixbundle found in latest release."
     exit 1
 }
 
