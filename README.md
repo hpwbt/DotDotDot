@@ -1,7 +1,3 @@
-# DotDotDot
-
-An **opinionated** Windows 11 system setup script.
-
 ## Usage
 
 Paste the following into PowerShell as Administrator:
